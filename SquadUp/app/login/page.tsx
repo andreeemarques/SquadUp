@@ -7,6 +7,7 @@ import { LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AuthShell, AuthField } from '@/components/auth-shell'
 import { apiFetch } from '@/lib/api'
+import { setAuthSession } from '@/lib/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -26,8 +27,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      setAuthSession(data.token, data.user)
       router.push('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao iniciar sessão')

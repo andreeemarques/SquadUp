@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, Crosshair, Menu, X, UserPlus, Users } from 'lucide-react'
+import { Bell, Crosshair, Menu, X, UserPlus, Users, LogOut, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/auth'
 
 const NAV_LINKS = [
   { href: '/search', label: 'Find Squad' },
@@ -14,28 +15,14 @@ const NAV_LINKS = [
 ]
 
 const NOTIFICATIONS = [
-  {
-    id: 1,
-    title: 'ValkyrieMain invited you to a squad',
-    time: '2m ago',
-    unread: true,
-  },
-  {
-    id: 2,
-    title: 'New reply on your ranked post',
-    time: '18m ago',
-    unread: true,
-  },
-  {
-    id: 3,
-    title: 'BreachKing left you a 5-star review',
-    time: '1h ago',
-    unread: false,
-  },
+  { id: 1, title: 'ValkyrieMain invited you to a squad', time: '2m ago', unread: true },
+  { id: 2, title: 'New reply on your ranked post', time: '18m ago', unread: true },
+  { id: 3, title: 'BreachKing left you a 5-star review', time: '1h ago', unread: false },
 ]
 
 export function Navbar() {
   const pathname = usePathname()
+  const { user, loading, logout } = useAuth()
   const [notifOpen, setNotifOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
@@ -86,6 +73,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {!loading && user && (
           <div className="relative" ref={notifRef}>
             <Button
               variant="ghost"
@@ -108,9 +96,7 @@ export function Navbar() {
                   <span className="font-display text-sm font-semibold tracking-wide">
                     NOTIFICATIONS
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {unreadCount} new
-                  </span>
+                  <span className="text-xs text-muted-foreground">{unreadCount} new</span>
                 </div>
                 <ul className="max-h-80 overflow-y-auto">
                   {NOTIFICATIONS.map((n) => (
@@ -125,12 +111,8 @@ export function Navbar() {
                         )}
                       />
                       <div className="min-w-0">
-                        <p className="text-sm leading-snug text-foreground">
-                          {n.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {n.time}
-                        </p>
+                        <p className="text-sm leading-snug text-foreground">{n.title}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{n.time}</p>
                       </div>
                     </li>
                   ))}
@@ -138,24 +120,37 @@ export function Navbar() {
               </div>
             )}
           </div>
+        )}
 
+          {/* Desktop: utilizador logado OU botões de login/signup */}
           <div className="hidden items-center gap-2 sm:flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              nativeButton={false}
-              render={<Link href="/login" />}
-            >
-              Log In
-            </Button>
-            <Button
-              size="sm"
-              nativeButton={false}
-              render={<Link href="/register" />}
-            >
-              <UserPlus className="size-4" />
-              Sign Up
-            </Button>
+            {loading ? null : user ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-secondary/60"
+                >
+                  <span className="flex size-7 items-center justify-center rounded-full bg-primary/15 text-primary">
+                    <User className="size-4" />
+                  </span>
+                  {user.username}
+                </Link>
+                <Button variant="ghost" size="sm" onClick={logout}>
+                  <LogOut className="size-4" />
+                  Log Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/login" />}>
+                  Log In
+                </Button>
+                <Button size="sm" nativeButton={false} render={<Link href="/register" />}>
+                  <UserPlus className="size-4" />
+                  Sign Up
+                </Button>
+              </>
+            )}
           </div>
 
           <Button
@@ -184,24 +179,24 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Mobile: utilizador logado OU botões de login/signup */}
             <div className="mt-2 flex gap-2 border-t border-border pt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                nativeButton={false}
-                render={<Link href="/login" />}
-              >
-                Log In
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1"
-                nativeButton={false}
-                render={<Link href="/register" />}
-              >
-                Sign Up
-              </Button>
+              {loading ? null : user ? (
+                <Button variant="outline" size="sm" className="flex-1" onClick={logout}>
+                  <LogOut className="size-4" />
+                  Log Out ({user.username})
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" className="flex-1" nativeButton={false} render={<Link href="/login" />}>
+                    Log In
+                  </Button>
+                  <Button size="sm" className="flex-1" nativeButton={false} render={<Link href="/register" />}>
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         </div>
