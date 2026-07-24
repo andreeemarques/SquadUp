@@ -11,7 +11,6 @@ import { useAuth } from '@/lib/auth'
 const NAV_LINKS = [
   { href: '/search', label: 'Find Squad' },
   { href: '/create', label: 'Create Post' },
-  { href: '/profile', label: 'Profile' },
 ]
 
 const NOTIFICATIONS = [
@@ -183,10 +182,21 @@ export function Navbar() {
             {/* Mobile: utilizador logado OU botões de login/signup */}
             <div className="mt-2 flex gap-2 border-t border-border pt-3">
               {loading ? null : user ? (
-                <Button variant="outline" size="sm" className="flex-1" onClick={logout}>
-                  <LogOut className="size-4" />
-                  Log Out ({user.username})
-                </Button>
+                <div className="flex flex-1 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    nativeButton={false}
+                    render={<Link href="/profile" onClick={() => setMobileOpen(false)} />}
+                  >
+                    <User className="size-4" />
+                    {user.username}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={logout}>
+                    <LogOut className="size-4" />
+                  </Button>
+                </div>
               ) : (
                 <>
                   <Button variant="outline" size="sm" className="flex-1" nativeButton={false} render={<Link href="/login" />}>

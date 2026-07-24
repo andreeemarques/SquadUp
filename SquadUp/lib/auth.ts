@@ -57,3 +57,8 @@ export function useAuth() {
 
   return { user, loading, logout }
 }
+
+export function updateAuthUser(user: AuthUser) {
+  localStorage.setItem('user', JSON.stringify(user))
+  window.dispatchEvent(new Event(AUTH_EVENT))
+}
