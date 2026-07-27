@@ -34,7 +34,7 @@ export const createSquadSchema = z.object({
   mode: gameModeEnum,
   language: languageEnum,
   micRequired: z.boolean(),
-  playersNeeded: z.number().int().min(1).max(10),
+  playersNeeded: z.number().int().min(1).max(4),
   description: z.string().min(1).max(500),
 })
 

@@ -77,6 +77,7 @@ export default function ProfilePage() {
         email: updated.email,
         ubisoftId: updated.ubisoftId,
         platform: updated.platform,
+        avatar: updated.avatar,
       })
       setEditing(false)
     } catch (err) {

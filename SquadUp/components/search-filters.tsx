@@ -153,15 +153,13 @@ export function SearchFilters({ filters, onChange }: SearchFiltersProps) {
             aria-checked={filters.micOnly}
             onClick={() => onChange({ ...filters, micOnly: !filters.micOnly })}
             className={cn(
-              'relative h-6 w-11 shrink-0 rounded-full transition-colors',
+              'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
               filters.micOnly ? 'bg-primary' : 'bg-input',
             )}
           >
             <span
-              className={cn(
-                'absolute top-0.5 size-5 rounded-full bg-background transition-transform',
-                filters.micOnly ? 'translate-x-[22px]' : 'translate-x-0.5',
-              )}
+              className="inline-block size-5 rounded-full bg-background transition-transform"
+              style={{ transform: filters.micOnly ? 'translateX(22px)' : 'translateX(2px)' }}
             />
           </button>
         </label>
@@ -197,14 +195,15 @@ function FilterCheck({
   onToggle: () => void
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2.5 text-sm">
-      <button
-        type="button"
+    <label
+      onClick={onToggle}
+      className="flex cursor-pointer items-center gap-2.5 text-sm"
+    >
+      <span
         role="checkbox"
         aria-checked={checked}
-        onClick={onToggle}
         className={cn(
-          'flex size-4 items-center justify-center rounded border transition-colors',
+          'flex size-4 shrink-0 items-center justify-center rounded border transition-colors',
           checked ? 'border-primary bg-primary' : 'border-border bg-transparent',
         )}
       >
@@ -219,13 +218,12 @@ function FilterCheck({
             <path d="M2.5 6.5L5 9l4.5-5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
-      </button>
+      </span>
       <span
         className={cn(
           checked ? 'text-foreground' : 'text-muted-foreground',
           'transition-colors',
         )}
-        onClick={onToggle}
       >
         {label}
       </span>

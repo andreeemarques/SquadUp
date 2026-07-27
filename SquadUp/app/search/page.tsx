@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { Search, SlidersHorizontal, X, Users } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Search, SlidersHorizontal, X, Users, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SquadCard } from '@/components/squad-card'
 import {
@@ -9,16 +9,64 @@ import {
   EMPTY_FILTERS,
   type Filters,
 } from '@/components/search-filters'
-import { SQUAD_POSTS } from '@/lib/data'
+import { type SquadPost } from '@/lib/data'
+import { apiFetch, fromApiEnum } from '@/lib/api'
 import { cn } from '@/lib/utils'
+
+interface ApiSquadPost {
+  id: string
+  userId: string
+  platform: string
+  region: string
+  rank: string
+  mode: string
+  language: string
+  micRequired: boolean
+  playersNeeded: number
+  description: string
+  createdAt: string
+  user: { username: string; avatar: string | null }
+}
+
+function mapApiPost(post: ApiSquadPost): SquadPost {
+  const minutesAgo = Math.max(
+    0,
+    Math.round((Date.now() - new Date(post.createdAt).getTime()) / 60000),
+  )
+  return {
+    id: post.id,
+    userId: post.userId,
+    username: post.user.username,
+    avatar: post.user.avatar || '/placeholder.svg',
+    platform: post.platform as SquadPost['platform'],
+    region: fromApiEnum(post.region) as SquadPost['region'],
+    rank: post.rank as SquadPost['rank'],
+    mode: fromApiEnum(post.mode) as SquadPost['mode'],
+    language: post.language as SquadPost['language'],
+    micRequired: post.micRequired,
+    playersNeeded: post.playersNeeded,
+    description: post.description,
+    postedMinutesAgo: minutesAgo,
+  }
+}
 
 export default function SearchPage() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [query, setQuery] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [posts, setPosts] = useState<SquadPost[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    apiFetch('/squads')
+      .then((data: ApiSquadPost[]) => setPosts(data.map(mapApiPost)))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar squads'))
+      .finally(() => setLoading(false))
+  }, [])
 
   const results = useMemo(() => {
-    return SQUAD_POSTS.filter((post) => {
+    return posts.filter((post) => {
       if (filters.platforms.length && !filters.platforms.includes(post.platform))
         return false
       if (filters.regions.length && !filters.regions.includes(post.region))
@@ -41,7 +89,7 @@ export default function SearchPage() {
         return false
       return true
     })
-  }, [filters, query])
+  }, [filters, query, posts])
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -86,43 +134,53 @@ export default function SearchPage() {
             </Button>
           </div>
 
-          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="size-4 text-primary" />
-            <span className="font-semibold text-foreground">
-              {results.length}
-            </span>{' '}
-            {results.length === 1 ? 'squad' : 'squads'} found
-          </div>
-
-          {results.length > 0 ? (
-            <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map((post) => (
-                <SquadCard key={post.id} post={post} />
-              ))}
+          {loading ? (
+            <div className="mt-16 flex justify-center">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
+          ) : error ? (
+            <p className="mt-8 text-center text-sm text-destructive">{error}</p>
           ) : (
-            <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
-              <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                <Search className="size-6" />
-              </span>
-              <h3 className="mt-4 font-display text-lg font-semibold">
-                No squads match your filters
-              </h3>
-              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Try loosening a few filters or clearing your search to see more
-                results.
-              </p>
-              <Button
-                variant="outline"
-                className="mt-5"
-                onClick={() => {
-                  setFilters(EMPTY_FILTERS)
-                  setQuery('')
-                }}
-              >
-                Clear all filters
-              </Button>
-            </div>
+            <>
+              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="size-4 text-primary" />
+                <span className="font-semibold text-foreground">
+                  {results.length}
+                </span>{' '}
+                {results.length === 1 ? 'squad' : 'squads'} found
+              </div>
+
+              {results.length > 0 ? (
+                <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {results.map((post) => (
+                    <SquadCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
+                  <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                    <Search className="size-6" />
+                  </span>
+                  <h3 className="mt-4 font-display text-lg font-semibold">
+                    No squads match your filters
+                  </h3>
+                  <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                    Try loosening a few filters or clearing your search to see more
+                    results.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-5"
+                    onClick={() => {
+                      setFilters(EMPTY_FILTERS)
+                      setQuery('')
+                    }}
+                  >
+                    Clear all filters
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

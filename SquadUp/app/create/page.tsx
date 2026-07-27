@@ -12,8 +12,12 @@ import {
   GAME_MODES,
   LANGUAGES,
 } from '@/lib/data'
+import { apiFetch, toApiEnum } from '@/lib/api'
+import { useAuth } from '@/lib/auth'
 
 export default function CreatePostPage() {
+  const { user, loading: authLoading } = useAuth()
+
   const [platform, setPlatform] = useState<string>('PC')
   const [region, setRegion] = useState<string>('North America')
   const [rank, setRank] = useState<string>('Gold')
@@ -23,10 +27,64 @@ export default function CreatePostPage() {
   const [playersNeeded, setPlayersNeeded] = useState(2)
   const [description, setDescription] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitted(true)
+    setError(null)
+
+    if (description.trim().length === 0) {
+      setError('Escreve uma descrição para o teu squad post.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await apiFetch('/squads', {
+        method: 'POST',
+        body: JSON.stringify({
+          platform,
+          region: toApiEnum(region),
+          rank,
+          mode: toApiEnum(mode),
+          language,
+          micRequired,
+          playersNeeded,
+          description: description.trim(),
+        }),
+      })
+      setSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao publicar o post')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // Ainda a carregar info de sessão -> evita "flash" de conteúdo errado
+  if (authLoading) return null
+
+  // Sem sessão -> não faz sentido publicar sem conta
+  if (!user) {
+    return (
+      <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-lg flex-col items-center justify-center px-4 py-16 text-center">
+        <h1 className="font-display text-2xl font-bold tracking-tight">
+          Precisas de ter sessão iniciada
+        </h1>
+        <p className="mt-3 text-muted-foreground">
+          Cria uma conta ou faz login para publicar um squad post.
+        </p>
+        <div className="mt-8 flex gap-3">
+          <Button variant="outline" nativeButton={false} render={<Link href="/login" />}>
+            Log In
+          </Button>
+          <Button nativeButton={false} render={<Link href="/register" />}>
+            Sign Up
+          </Button>
+        </div>
+      </main>
+    )
   }
 
   if (submitted) {
@@ -90,18 +148,10 @@ export default function CreatePostPage() {
 
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label="Game Mode">
-            <SelectBox
-              options={GAME_MODES}
-              value={mode}
-              onChange={setMode}
-            />
+            <SelectBox options={GAME_MODES} value={mode} onChange={setMode} />
           </Field>
           <Field label="Language">
-            <SelectBox
-              options={LANGUAGES}
-              value={language}
-              onChange={setLanguage}
-            />
+            <SelectBox options={LANGUAGES} value={language} onChange={setLanguage} />
           </Field>
         </div>
 
@@ -160,18 +210,18 @@ export default function CreatePostPage() {
             aria-checked={micRequired}
             onClick={() => setMicRequired((v) => !v)}
             className={cn(
-              'relative h-6 w-11 shrink-0 rounded-full transition-colors',
+              'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
               micRequired ? 'bg-primary' : 'bg-input',
             )}
           >
             <span
-              className={cn(
-                'absolute top-0.5 size-5 rounded-full bg-background transition-transform',
-                micRequired ? 'translate-x-[22px]' : 'translate-x-0.5',
-              )}
+              className="inline-block size-5 rounded-full bg-background transition-transform"
+              style={{ transform: micRequired ? 'translateX(22px)' : 'translateX(2px)' }}
             />
           </button>
         </label>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
           <Button
@@ -182,9 +232,9 @@ export default function CreatePostPage() {
           >
             Cancel
           </Button>
-          <Button type="submit" size="lg" className="sm:px-8">
+          <Button type="submit" size="lg" className="sm:px-8" disabled={submitting}>
             <Send className="size-4" />
-            Publish squad post
+            {submitting ? 'A publicar...' : 'Publish squad post'}
           </Button>
         </div>
       </form>
@@ -192,13 +242,7 @@ export default function CreatePostPage() {
   )
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2.5">
       <label className="text-sm font-semibold">{label}</label>

@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string
   ubisoftId?: string | null
   platform?: string | null
+  avatar?: string | null
 }
 
 const AUTH_EVENT = 'squadup-auth-changed'

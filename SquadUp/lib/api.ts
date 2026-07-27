@@ -19,3 +19,11 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
 
   return res.json()
 }
+
+export function toApiEnum(value: string) {
+  return value.replace(/ /g, '_')
+}
+
+export function fromApiEnum(value: string) {
+  return value.replace(/_/g, ' ')
+}

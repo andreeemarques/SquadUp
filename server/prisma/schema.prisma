@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(uuid())
-  username  String      @unique
-  email     String      @unique
-  password  String
-  avatar    String?
-  ubisoftId String?
-  platform  Platform?
-  bio       String?
-  preferredOperators String[]    @default([])
-  createdAt DateTime    @default(now())
-  posts     SquadPost[]
+  id                   String         @id @default(uuid())
+  username             String         @unique
+  email                String         @unique
+  password             String
+  avatar               String?
+  ubisoftId            String?
+  platform             Platform?
+  bio                  String?
+  preferredOperators   String[]       @default([])
+  createdAt            DateTime       @default(now())
+  posts                SquadPost[]
+  receivedNotifications Notification[] @relation("ReceivedNotifications")
+  sentNotifications     Notification[] @relation("SentNotifications")
 }
 
 model SquadPost {
@@ -34,6 +36,24 @@ model SquadPost {
   playersNeeded Int
   description   String
   createdAt     DateTime @default(now())
+  notifications Notification[]
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  recipient   User             @relation("ReceivedNotifications", fields: [recipientId], references: [id])
+  recipientId String
+  actor       User             @relation("SentNotifications", fields: [actorId], references: [id])
+  actorId     String
+  squadPost   SquadPost?       @relation(fields: [squadPostId], references: [id])
+  squadPostId String?
+  type        NotificationType
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+}
+
+enum NotificationType {
+  JOIN_REQUEST
 }
 
 enum Platform {

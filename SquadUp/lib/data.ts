@@ -58,6 +58,7 @@ export const RANK_COLORS: Record<Rank, string> = {
 
 export interface SquadPost {
   id: string
+  userId?: string
   username: string
   avatar: string
   platform: Platform

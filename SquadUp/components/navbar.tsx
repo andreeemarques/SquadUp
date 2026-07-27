@@ -7,6 +7,7 @@ import { Bell, Crosshair, Menu, X, UserPlus, Users, LogOut, User } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
+import Image from 'next/image'
 
 const NAV_LINKS = [
   { href: '/search', label: 'Find Squad' },
@@ -129,8 +130,12 @@ export function Navbar() {
                   href="/profile"
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-secondary/60"
                 >
-                  <span className="flex size-7 items-center justify-center rounded-full bg-primary/15 text-primary">
-                    <User className="size-4" />
+                  <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-primary">
+                    {user.avatar ? (
+                      <Image src={user.avatar} alt={user.username} width={28} height={28} className="size-full object-cover" />
+                    ) : (
+                      <User className="size-4" />
+                    )}
                   </span>
                   {user.username}
                 </Link>
@@ -190,7 +195,13 @@ export function Navbar() {
                     nativeButton={false}
                     render={<Link href="/profile" onClick={() => setMobileOpen(false)} />}
                   >
-                    <User className="size-4" />
+                    <span className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-primary">
+                      {user.avatar ? (
+                        <Image src={user.avatar} alt={user.username} width={20} height={20} className="size-full object-cover" />
+                      ) : (
+                        <User className="size-3.5" />
+                      )}
+                    </span>
                     {user.username}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={logout}>

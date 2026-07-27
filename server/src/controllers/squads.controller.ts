@@ -33,3 +33,25 @@ export async function createSquad(req: AuthRequest, res: Response) {
 
   res.status(201).json(post)
 }
+
+export async function joinSquad(req: AuthRequest, res: Response) {
+  const { id } = req.params
+
+  const post = await prisma.squadPost.findUnique({ where: { id } })
+  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+
+  if (post.userId === req.userId) {
+    return res.status(400).json({ error: 'Não podes candidatar-te ao teu próprio post' })
+  }
+
+  await prisma.notification.create({
+    data: {
+      recipientId: post.userId,
+      actorId: req.userId!,
+      squadPostId: post.id,
+      type: 'JOIN_REQUEST',
+    },
+  })
+
+  res.status(201).json({ success: true })
+}
