@@ -1,32 +1,53 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, Crosshair, Menu, X, UserPlus, Users, LogOut, User } from 'lucide-react'
+import { Bell, Crosshair, Menu, X, UserPlus, Users, LogOut, User, Check, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
-import Image from 'next/image'
+import { apiFetch } from '@/lib/api'
 
 const NAV_LINKS = [
   { href: '/search', label: 'Find Squad' },
   { href: '/create', label: 'Create Post' },
 ]
 
-const NOTIFICATIONS = [
-  { id: 1, title: 'ValkyrieMain invited you to a squad', time: '2m ago', unread: true },
-  { id: 2, title: 'New reply on your ranked post', time: '18m ago', unread: true },
-  { id: 3, title: 'BreachKing left you a 5-star review', time: '1h ago', unread: false },
-]
+interface Notification {
+  id: string
+  type: 'JOIN_REQUEST'
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  read: boolean
+  createdAt: string
+  actor: { username: string; avatar: string | null; ubisoftId: string | null }
+  squadPost: { id: string } | null
+}
 
 export function Navbar() {
   const pathname = usePathname()
   const { user, loading, logout } = useAuth()
   const [notifOpen, setNotifOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [respondingId, setRespondingId] = useState<string | null>(null)
   const notifRef = useRef<HTMLDivElement>(null)
-  const unreadCount = NOTIFICATIONS.filter((n) => n.unread).length
+
+  const loadNotifications = useCallback(() => {
+    if (!user) return
+    apiFetch('/notifications')
+      .then((data: { notifications: Notification[]; unreadCount: number }) => {
+        setNotifications(data.notifications)
+        setUnreadCount(data.unreadCount)
+      })
+      .catch(() => {})
+  }, [user])
+
+  useEffect(() => {
+    loadNotifications()
+  }, [loadNotifications])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -37,6 +58,37 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  async function handleToggleNotif() {
+    const next = !notifOpen
+    setNotifOpen(next)
+    if (next && unreadCount > 0) {
+      try {
+        await apiFetch('/notifications/read-all', { method: 'PATCH' })
+        setUnreadCount(0)
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+      } catch {}
+    }
+  }
+
+  async function handleRespond(id: string, action: 'accept' | 'decline') {
+    setRespondingId(id)
+    try {
+      await apiFetch(`/notifications/${id}/respond`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action }),
+      })
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, status: action === 'accept' ? 'ACCEPTED' : 'DECLINED' } : n,
+        ),
+      )
+    } catch {
+      // silencioso: o pedido pode já ter sido respondido entretanto
+    } finally {
+      setRespondingId(null)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -74,55 +126,114 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           {!loading && user && (
-          <div className="relative" ref={notifRef}>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Notifications"
-              onClick={() => setNotifOpen((v) => !v)}
-              className="relative"
-            >
-              <Bell className="size-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
-                  {unreadCount}
-                </span>
-              )}
-            </Button>
-
-            {notifOpen && (
-              <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-popover shadow-2xl">
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                  <span className="font-display text-sm font-semibold tracking-wide">
-                    NOTIFICATIONS
+            <div className="relative" ref={notifRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Notifications"
+                onClick={handleToggleNotif}
+                className="relative"
+              >
+                <Bell className="size-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                    {unreadCount}
                   </span>
-                  <span className="text-xs text-muted-foreground">{unreadCount} new</span>
-                </div>
-                <ul className="max-h-80 overflow-y-auto">
-                  {NOTIFICATIONS.map((n) => (
-                    <li
-                      key={n.id}
-                      className="flex items-start gap-3 border-b border-border/60 px-4 py-3 last:border-0 hover:bg-secondary/40"
-                    >
-                      <span
-                        className={cn(
-                          'mt-1.5 size-2 shrink-0 rounded-full',
-                          n.unread ? 'bg-accent' : 'bg-muted-foreground/40',
-                        )}
-                      />
-                      <div className="min-w-0">
-                        <p className="text-sm leading-snug text-foreground">{n.title}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{n.time}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
+                )}
+              </Button>
 
-          {/* Desktop: utilizador logado OU botões de login/signup */}
+              {notifOpen && (
+                <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-popover shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                    <span className="font-display text-sm font-semibold tracking-wide">
+                      NOTIFICATIONS
+                    </span>
+                  </div>
+                  <ul className="max-h-96 overflow-y-auto">
+                    {notifications.length === 0 && (
+                      <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+                        Sem notificações por agora.
+                      </li>
+                    )}
+                    {notifications.map((n) => (
+                      <li
+                        key={n.id}
+                        className="flex flex-col gap-2 border-b border-border/60 px-4 py-3 last:border-0"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="relative mt-0.5 size-8 shrink-0 overflow-hidden rounded-full bg-secondary">
+                            {n.actor.avatar && (
+                              <Image
+                                src={n.actor.avatar}
+                                alt={n.actor.username}
+                                fill
+                                className="object-cover"
+                              />
+                            )}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm leading-snug text-foreground">
+                              <span className="font-semibold">{n.actor.username}</span> quer
+                              juntar-se ao teu squad
+                            </p>
+                            {n.actor.ubisoftId && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                Ubisoft ID: <span className="font-medium text-foreground">{n.actor.ubisoftId}</span>
+                              </p>
+                            )}
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {new Date(n.createdAt).toLocaleString('pt-PT', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {n.status === 'PENDING' ? (
+                          <div className="flex gap-2 pl-11">
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              disabled={respondingId === n.id}
+                              onClick={() => handleRespond(n.id, 'accept')}
+                            >
+                              <Check className="size-3.5" />
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              disabled={respondingId === n.id}
+                              onClick={() => handleRespond(n.id, 'decline')}
+                            >
+                              <XCircle className="size-3.5" />
+                              Decline
+                            </Button>
+                          </div>
+                        ) : (
+                          <span
+                            className={cn(
+                              'ml-11 w-fit rounded-md px-2 py-0.5 text-xs font-medium',
+                              n.status === 'ACCEPTED'
+                                ? 'bg-primary/15 text-primary'
+                                : 'bg-secondary text-muted-foreground',
+                            )}
+                          >
+                            {n.status === 'ACCEPTED' ? 'Accepted' : 'Declined'}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="hidden items-center gap-2 sm:flex">
             {loading ? null : user ? (
               <div className="flex items-center gap-3">
@@ -184,7 +295,6 @@ export function Navbar() {
               </Link>
             ))}
 
-            {/* Mobile: utilizador logado OU botões de login/signup */}
             <div className="mt-2 flex gap-2 border-t border-border pt-3">
               {loading ? null : user ? (
                 <div className="flex flex-1 gap-2">

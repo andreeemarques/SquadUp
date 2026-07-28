@@ -59,6 +59,7 @@ export const RANK_COLORS: Record<Rank, string> = {
 export interface SquadPost {
   id: string
   userId?: string
+  requestStatus?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null
   username: string
   avatar: string
   platform: Platform

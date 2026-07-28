@@ -40,20 +40,27 @@ model SquadPost {
 }
 
 model Notification {
-  id          String           @id @default(uuid())
-  recipient   User             @relation("ReceivedNotifications", fields: [recipientId], references: [id])
+  id          String             @id @default(uuid())
+  recipient   User               @relation("ReceivedNotifications", fields: [recipientId], references: [id])
   recipientId String
-  actor       User             @relation("SentNotifications", fields: [actorId], references: [id])
+  actor       User               @relation("SentNotifications", fields: [actorId], references: [id])
   actorId     String
-  squadPost   SquadPost?       @relation(fields: [squadPostId], references: [id])
+  squadPost   SquadPost?         @relation(fields: [squadPostId], references: [id])
   squadPostId String?
   type        NotificationType
-  read        Boolean          @default(false)
-  createdAt   DateTime         @default(now())
+  status      NotificationStatus @default(PENDING)
+  read        Boolean            @default(false)
+  createdAt   DateTime           @default(now())
 }
 
 enum NotificationType {
   JOIN_REQUEST
+}
+
+enum NotificationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
 }
 
 enum Platform {

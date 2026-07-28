@@ -6,8 +6,8 @@ export async function listNotifications(req: AuthRequest, res: Response) {
   const notifications = await prisma.notification.findMany({
     where: { recipientId: req.userId },
     include: {
-      actor: { select: { username: true, avatar: true } },
-      squadPost: { select: { description: true } },
+      actor: { select: { username: true, avatar: true, ubisoftId: true } },
+      squadPost: { select: { id: true } },
     },
     orderBy: { createdAt: 'desc' },
     take: 30,
@@ -24,4 +24,39 @@ export async function markAllRead(req: AuthRequest, res: Response) {
     data: { read: true },
   })
   res.json({ success: true })
+}
+
+export async function respondToNotification(req: AuthRequest, res: Response) {
+  const id = req.params.id as string
+  const { action } = req.body as { action: 'accept' | 'decline' }
+
+  if (action !== 'accept' && action !== 'decline') {
+    return res.status(400).json({ error: 'Ação inválida' })
+  }
+
+  const notification = await prisma.notification.findUnique({ where: { id } })
+  if (!notification) return res.status(404).json({ error: 'Notificação não encontrada' })
+  if (notification.recipientId !== req.userId) {
+    return res.status(403).json({ error: 'Sem permissão para responder a esta notificação' })
+  }
+  if (notification.status !== 'PENDING') {
+    return res.status(409).json({ error: 'Este pedido já foi respondido' })
+  }
+
+  const updated = await prisma.notification.update({
+    where: { id },
+    data: {
+      status: action === 'accept' ? 'ACCEPTED' : 'DECLINED',
+      read: true,
+    },
+  })
+
+  if (action === 'accept' && notification.squadPostId) {
+    await prisma.squadPost.updateMany({
+      where: { id: notification.squadPostId, playersNeeded: { gt: 0 } },
+      data: { playersNeeded: { decrement: 1 } },
+    })
+  }
+
+  res.json(updated)
 }

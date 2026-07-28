@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma'
 import { AuthRequest } from '../middleware/auth'
 import { createSquadSchema } from '../schemas/squad.schema'
 
-export async function listSquads(req: Request, res: Response) {
+export async function listSquads(req: AuthRequest, res: Response) {
   const { platform, region, rank, mode, language } = req.query
 
   const posts = await prisma.squadPost.findMany({
@@ -18,7 +18,26 @@ export async function listSquads(req: Request, res: Response) {
     orderBy: { createdAt: 'desc' },
   })
 
-  res.json(posts)
+  if (!req.userId) {
+    return res.json(posts.map((p) => ({ ...p, requestStatus: null })))
+  }
+
+  const myRequests = await prisma.notification.findMany({
+    where: {
+      actorId: req.userId,
+      squadPostId: { in: posts.map((p) => p.id) },
+    },
+    select: { squadPostId: true, status: true },
+  })
+
+  const statusByPostId = new Map(myRequests.map((r) => [r.squadPostId, r.status]))
+
+  res.json(
+    posts.map((p) => ({
+      ...p,
+      requestStatus: statusByPostId.get(p.id) ?? null,
+    })),
+  )
 }
 
 export async function createSquad(req: AuthRequest, res: Response) {
@@ -35,13 +54,25 @@ export async function createSquad(req: AuthRequest, res: Response) {
 }
 
 export async function joinSquad(req: AuthRequest, res: Response) {
-  const { id } = req.params
+  const id = req.params.id as string
 
   const post = await prisma.squadPost.findUnique({ where: { id } })
   if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
 
   if (post.userId === req.userId) {
     return res.status(400).json({ error: 'Não podes candidatar-te ao teu próprio post' })
+  }
+
+  const existing = await prisma.notification.findFirst({
+    where: {
+      squadPostId: post.id,
+      actorId: req.userId,
+      status: 'PENDING',
+    },
+  })
+
+  if (existing) {
+    return res.status(409).json({ error: 'Já tens um pedido pendente para este squad' })
   }
 
   await prisma.notification.create({

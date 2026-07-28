@@ -25,6 +25,7 @@ interface ApiSquadPost {
   playersNeeded: number
   description: string
   createdAt: string
+  requestStatus: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null
   user: { username: string; avatar: string | null }
 }
 
@@ -47,6 +48,7 @@ function mapApiPost(post: ApiSquadPost): SquadPost {
     playersNeeded: post.playersNeeded,
     description: post.description,
     postedMinutesAgo: minutesAgo,
+    requestStatus: post.requestStatus,
   }
 }
 

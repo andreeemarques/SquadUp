@@ -21,3 +21,20 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     res.status(401).json({ error: 'Token inválido ou expirado' })
   }
 }
+
+// Não bloqueia o pedido se não houver token — só preenche req.userId quando existir
+export function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization
+  const token = authHeader?.split(' ')[1]
+
+  if (token) {
+    try {
+      const payload = verifyToken(token)
+      req.userId = payload.userId
+    } catch {
+      // token inválido -> ignora, trata como visitante sem sessão
+    }
+  }
+
+  next()
+}

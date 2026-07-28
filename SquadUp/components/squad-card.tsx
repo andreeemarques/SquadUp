@@ -1,16 +1,36 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
-import { Clock, Users, Mic, MicOff, Globe, MapPin } from 'lucide-react'
+import { Clock, Users, Mic, MicOff, Globe, MapPin, Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { RankBadge } from '@/components/rank-badge'
 import { PlatformIcon } from '@/components/platform-icon'
 import { timeAgo, type SquadPost } from '@/lib/data'
 import { useAuth } from '@/lib/auth'
+import { apiFetch } from '@/lib/api'
 
 export function SquadCard({ post }: { post: SquadPost }) {
   const { user } = useAuth()
   const isOwnPost = !!user && !!post.userId && user.id === post.userId
+
+  const initialStatus =
+    post.requestStatus === 'PENDING' || post.requestStatus === 'ACCEPTED' ? 'sent' : 'idle'
+  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>(initialStatus)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleJoin() {
+    if (!user) return
+    setStatus('loading')
+    setError(null)
+    try {
+      await apiFetch(`/squads/${post.id}/join`, { method: 'POST' })
+      setStatus('sent')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar pedido')
+      setStatus('error')
+    }
+  }
 
   return (
     <article className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
@@ -86,7 +106,31 @@ export function SquadCard({ post }: { post: SquadPost }) {
             {timeAgo(post.postedMinutesAgo)}
           </span>
         </div>
-        {!isOwnPost && <Button size="sm">Join</Button>}
+
+        {!isOwnPost && (
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              size="sm"
+              disabled={status === 'loading' || status === 'sent'}
+              onClick={handleJoin}
+            >
+              {status === 'loading' ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  Sending...
+                </>
+              ) : status === 'sent' ? (
+                <>
+                  <Check className="size-3.5" />
+                  {post.requestStatus === 'ACCEPTED' ? 'Accepted' : 'Requested'}
+                </>
+              ) : (
+                'Join'
+              )}
+            </Button>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </div>
+        )}
       </div>
     </article>
   )
