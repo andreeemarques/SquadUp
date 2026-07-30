@@ -39,3 +39,6 @@ export const createSquadSchema = z.object({
 })
 
 export type CreateSquadInput = z.infer<typeof createSquadSchema>
+
+export const updateSquadSchema = createSquadSchema.partial()
+export type UpdateSquadInput = z.infer<typeof updateSquadSchema>

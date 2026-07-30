@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Mic, Minus, Plus, Send, CheckCircle2 } from 'lucide-react'
+import { Mic, Minus, Plus, Send, CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -12,11 +12,15 @@ import {
   GAME_MODES,
   LANGUAGES,
 } from '@/lib/data'
-import { apiFetch, toApiEnum } from '@/lib/api'
+import { apiFetch, toApiEnum, fromApiEnum } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 export default function CreatePostPage() {
   const { user, loading: authLoading } = useAuth()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('edit')
+  const [loadingPost, setLoadingPost] = useState(!!editId)
 
   const [platform, setPlatform] = useState<string>('PC')
   const [region, setRegion] = useState<string>('North America')
@@ -30,6 +34,23 @@ export default function CreatePostPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!editId) return
+    apiFetch(`/squads/${editId}`)
+      .then((post: any) => {
+        setPlatform(post.platform)
+        setRegion(fromApiEnum(post.region))
+        setRank(post.rank)
+        setMode(fromApiEnum(post.mode))
+        setLanguage(post.language)
+        setMicRequired(post.micRequired)
+        setPlayersNeeded(post.playersNeeded)
+        setDescription(post.description)
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar post'))
+      .finally(() => setLoadingPost(false))
+  }, [editId])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -41,19 +62,22 @@ export default function CreatePostPage() {
 
     setSubmitting(true)
     try {
-      await apiFetch('/squads', {
-        method: 'POST',
-        body: JSON.stringify({
-          platform,
-          region: toApiEnum(region),
-          rank,
-          mode: toApiEnum(mode),
-          language,
-          micRequired,
-          playersNeeded,
-          description: description.trim(),
-        }),
+      const body = JSON.stringify({
+        platform,
+        region: toApiEnum(region),
+        rank,
+        mode: toApiEnum(mode),
+        language,
+        micRequired,
+        playersNeeded,
+        description: description.trim(),
       })
+
+      if (editId) {
+        await apiFetch(`/squads/${editId}`, { method: 'PATCH', body })
+      } else {
+        await apiFetch('/squads', { method: 'POST', body })
+      }
       setSubmitted(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao publicar o post')
@@ -61,7 +85,6 @@ export default function CreatePostPage() {
       setSubmitting(false)
     }
   }
-
   // Ainda a carregar info de sessão -> evita "flash" de conteúdo errado
   if (authLoading) return null
 
@@ -86,6 +109,14 @@ export default function CreatePostPage() {
       </main>
     )
   }
+
+  if (loadingPost) {
+  return (
+    <main className="flex min-h-[60vh] items-center justify-center">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" />
+    </main>
+  )
+}
 
   if (submitted) {
     return (
@@ -122,7 +153,7 @@ export default function CreatePostPage() {
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          Create a Squad Post
+          {editId ? 'Edit Squad Post' : 'Create a Squad Post'}
         </h1>
         <p className="text-muted-foreground">
           Tell players what you&apos;re looking for. The more specific you are,
@@ -234,7 +265,7 @@ export default function CreatePostPage() {
           </Button>
           <Button type="submit" size="lg" className="sm:px-8" disabled={submitting}>
             <Send className="size-4" />
-            {submitting ? 'A publicar...' : 'Publish squad post'}
+            {submitting ? 'A guardar...' : editId ? 'Save changes' : 'Publish squad post'}
           </Button>
         </div>
       </form>

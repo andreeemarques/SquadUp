@@ -58,5 +58,16 @@ export async function respondToNotification(req: AuthRequest, res: Response) {
     })
   }
 
+  // Notifica quem pediu para entrar, para ele saber o resultado
+  await prisma.notification.create({
+    data: {
+      recipientId: notification.actorId,
+      actorId: req.userId!,
+      squadPostId: notification.squadPostId,
+      type: action === 'accept' ? 'JOIN_ACCEPTED' : 'JOIN_DECLINED',
+      status: action === 'accept' ? 'ACCEPTED' : 'DECLINED',
+    },
+  })
+
   res.json(updated)
 }

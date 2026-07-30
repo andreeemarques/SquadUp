@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { prisma } from '../lib/prisma'
 import { AuthRequest } from '../middleware/auth'
-import { createSquadSchema } from '../schemas/squad.schema'
+import { createSquadSchema, updateSquadSchema } from '../schemas/squad.schema'
 
 export async function listSquads(req: AuthRequest, res: Response) {
   const { platform, region, rank, mode, language } = req.query
@@ -85,4 +85,53 @@ export async function joinSquad(req: AuthRequest, res: Response) {
   })
 
   res.status(201).json({ success: true })
+}
+
+export async function updateSquad(req: AuthRequest, res: Response) {
+  const id = req.params.id as string
+
+  const post = await prisma.squadPost.findUnique({ where: { id } })
+  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  if (post.userId !== req.userId) {
+    return res.status(403).json({ error: 'Sem permissão para editar este post' })
+  }
+
+  const parsed = updateSquadSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message })
+  }
+
+  const updated = await prisma.squadPost.update({
+    where: { id },
+    data: parsed.data,
+  })
+
+  res.json(updated)
+}
+
+export async function deleteSquad(req: AuthRequest, res: Response) {
+  const id = req.params.id as string
+
+  const post = await prisma.squadPost.findUnique({ where: { id } })
+  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  if (post.userId !== req.userId) {
+    return res.status(403).json({ error: 'Sem permissão para apagar este post' })
+  }
+
+  await prisma.notification.deleteMany({ where: { squadPostId: id } })
+  await prisma.squadPost.delete({ where: { id } })
+
+  res.status(204).send()
+}
+
+export async function getSquad(req: Request, res: Response) {
+  const id = req.params.id as string
+
+  const post = await prisma.squadPost.findUnique({
+    where: { id },
+    include: { user: { select: { username: true, avatar: true } } },
+  })
+
+  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  res.json(post)
 }

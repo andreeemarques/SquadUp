@@ -2,13 +2,15 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Clock, Users, Mic, MicOff, Globe, MapPin, Check, Loader2 } from 'lucide-react'
+import { Clock, Users, Mic, MicOff, Globe, MapPin, Check, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { RankBadge } from '@/components/rank-badge'
 import { PlatformIcon } from '@/components/platform-icon'
 import { timeAgo, type SquadPost } from '@/lib/data'
 import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export function SquadCard({ post }: { post: SquadPost }) {
   const { user } = useAuth()
@@ -18,6 +20,9 @@ export function SquadCard({ post }: { post: SquadPost }) {
     post.requestStatus === 'PENDING' || post.requestStatus === 'ACCEPTED' ? 'sent' : 'idle'
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>(initialStatus)
   const [error, setError] = useState<string | null>(null)
+
+  const router = useRouter()
+  const [deleting, setDeleting] = useState(false)
 
   async function handleJoin() {
     if (!user) return
@@ -29,6 +34,18 @@ export function SquadCard({ post }: { post: SquadPost }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao enviar pedido')
       setStatus('error')
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('Tens a certeza que queres apagar este squad post?')) return
+    setDeleting(true)
+    try {
+      await apiFetch(`/squads/${post.id}`, { method: 'DELETE' })
+      window.location.reload()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao apagar')
+      setDeleting(false)
     }
   }
 
@@ -46,12 +63,20 @@ export function SquadCard({ post }: { post: SquadPost }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate font-display text-lg font-semibold leading-tight">
+            <Link
+              href={isOwnPost ? '/profile' : `/profile/${post.username}`}
+              className="truncate font-display text-lg font-semibold leading-tight hover:text-primary hover:underline"
+            >
               {post.username}
-            </h3>
+            </Link>
             {isOwnPost && (
               <span className="shrink-0 rounded-md bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Your post
+              </span>
+            )}
+            {post.playersNeeded === 0 && (
+              <span className="shrink-0 rounded-md bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                Full
               </span>
             )}
           </div>
@@ -92,22 +117,53 @@ export function SquadCard({ post }: { post: SquadPost }) {
         </Chip>
       </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-border/60 pt-4">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border/60 pt-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <Users className="size-4 text-primary" />
-            <span className="font-semibold text-foreground">
-              {post.playersNeeded}
-            </span>{' '}
-            needed
+            {post.playersNeeded > 0 ? (
+              <>
+                <span className="font-semibold text-foreground">{post.playersNeeded}</span> needed
+              </>
+            ) : (
+              <span className="font-semibold text-foreground">Squad complete</span>
+            )}
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="size-4" />
             {timeAgo(post.postedMinutesAgo)}
+            {post.editedMinutesAgo != null && (
+              <span className="text-muted-foreground/70"> · edited {timeAgo(post.editedMinutesAgo)}</span>
+            )}
           </span>
         </div>
-
-        {!isOwnPost && (
+        {isOwnPost ? (
+          <div className="flex gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-2.5"
+              aria-label="Edit post"
+              onClick={() => router.push(`/create?edit=${post.id}`)}
+            >
+              <Pencil className="size-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2.5 text-destructive hover:text-destructive"
+              aria-label="Delete post"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          </div>
+        ) : post.playersNeeded === 0 ? (
+          <span className="rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+            Squad complete
+          </span>
+        ) : (
           <div className="flex flex-col items-end gap-1">
             <Button
               size="sm"

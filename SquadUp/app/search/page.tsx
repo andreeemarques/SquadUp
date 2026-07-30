@@ -25,15 +25,24 @@ interface ApiSquadPost {
   playersNeeded: number
   description: string
   createdAt: string
+  updatedAt: string
   requestStatus: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null
   user: { username: string; avatar: string | null }
 }
 
+
+
 function mapApiPost(post: ApiSquadPost): SquadPost {
-  const minutesAgo = Math.max(
+  const createdMinutesAgo = Math.max(
     0,
     Math.round((Date.now() - new Date(post.createdAt).getTime()) / 60000),
   )
+  const updatedMinutesAgo = Math.max(
+    0,
+    Math.round((Date.now() - new Date(post.updatedAt).getTime()) / 60000),
+  )
+  const wasEdited = post.updatedAt !== post.createdAt
+
   return {
     id: post.id,
     userId: post.userId,
@@ -47,7 +56,8 @@ function mapApiPost(post: ApiSquadPost): SquadPost {
     micRequired: post.micRequired,
     playersNeeded: post.playersNeeded,
     description: post.description,
-    postedMinutesAgo: minutesAgo,
+    postedMinutesAgo: createdMinutesAgo,
+    editedMinutesAgo: wasEdited ? updatedMinutesAgo : null,
     requestStatus: post.requestStatus,
   }
 }
@@ -59,6 +69,8 @@ export default function SearchPage() {
   const [posts, setPosts] = useState<SquadPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 10
 
   useEffect(() => {
     apiFetch('/squads')
@@ -66,6 +78,10 @@ export default function SearchPage() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar squads'))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+  setPage(1)
+}, [filters, query])
 
   const results = useMemo(() => {
     return posts.filter((post) => {
@@ -92,6 +108,9 @@ export default function SearchPage() {
       return true
     })
   }, [filters, query, posts])
+
+  const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE))
+  const paginatedResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -153,11 +172,52 @@ export default function SearchPage() {
               </div>
 
               {results.length > 0 ? (
-                <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                  {results.map((post) => (
-                    <SquadCard key={post.id} post={post} />
-                  ))}
-                </div>
+                <>
+                  <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {paginatedResults.map((post) => (
+                      <SquadCard key={post.id} post={post} />
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="mt-8 flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      >
+                        Previous
+                      </Button>
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => setPage(p)}
+                            className={cn(
+                              'flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors',
+                              p === page
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-secondary',
+                            )}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === totalPages}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
                   <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">

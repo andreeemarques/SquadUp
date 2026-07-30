@@ -1,11 +1,21 @@
 import { Router } from 'express'
-import { listSquads, createSquad, joinSquad } from '../controllers/squads.controller'
+import {
+  listSquads,
+  createSquad,
+  joinSquad,
+  getSquad,
+  updateSquad,
+  deleteSquad,
+} from '../controllers/squads.controller'
 import { requireAuth, optionalAuth } from '../middleware/auth'
 
 const router = Router()
 
 router.get('/', optionalAuth, listSquads)
+router.get('/:id', getSquad)
 router.post('/', requireAuth, createSquad)
 router.post('/:id/join', requireAuth, joinSquad)
+router.patch('/:id', requireAuth, updateSquad)
+router.delete('/:id', requireAuth, deleteSquad)
 
 export default router

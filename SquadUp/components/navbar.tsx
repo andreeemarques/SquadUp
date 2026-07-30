@@ -17,7 +17,7 @@ const NAV_LINKS = [
 
 interface Notification {
   id: string
-  type: 'JOIN_REQUEST'
+  type: 'JOIN_REQUEST' | 'JOIN_ACCEPTED' | 'JOIN_DECLINED'
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
   read: boolean
   createdAt: string
@@ -173,8 +173,30 @@ export function Navbar() {
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm leading-snug text-foreground">
-                              <span className="font-semibold">{n.actor.username}</span> quer
-                              juntar-se ao teu squad
+                              {n.type === 'JOIN_REQUEST' && (
+                                <>
+                                  <Link href={`/profile/${n.actor.username}`} className="font-semibold hover:text-primary hover:underline" onClick={() => setNotifOpen(false)}>
+                                    {n.actor.username}
+                                  </Link>{' '} 
+                                  quer juntar-se ao teu squad
+                                </>
+                              )}
+                              {n.type === 'JOIN_ACCEPTED' && (
+                                <>
+                                  <Link href={`/profile/${n.actor.username}`} className="font-semibold hover:text-primary hover:underline" onClick={() => setNotifOpen(false)}>
+                                    {n.actor.username}
+                                  </Link>{' '} 
+                                  aceitou o teu pedido para entrar no squad
+                                </>
+                              )}
+                              {n.type === 'JOIN_DECLINED' && (
+                                <>
+                                  <Link href={`/profile/${n.actor.username}`} className="font-semibold hover:text-primary hover:underline" onClick={() => setNotifOpen(false)}>
+                                    {n.actor.username}
+                                  </Link>{' '} 
+                                  recusou o teu pedido para entrar no squad
+                                </>
+                              )}
                             </p>
                             {n.actor.ubisoftId && (
                               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -192,7 +214,7 @@ export function Navbar() {
                           </div>
                         </div>
 
-                        {n.status === 'PENDING' ? (
+                        {n.type === 'JOIN_REQUEST' && n.status === 'PENDING' && (
                           <div className="flex gap-2 pl-11">
                             <Button
                               size="sm"
@@ -214,7 +236,9 @@ export function Navbar() {
                               Decline
                             </Button>
                           </div>
-                        ) : (
+                        )}
+
+                        {n.type === 'JOIN_REQUEST' && n.status !== 'PENDING' && (
                           <span
                             className={cn(
                               'ml-11 w-fit rounded-md px-2 py-0.5 text-xs font-medium',

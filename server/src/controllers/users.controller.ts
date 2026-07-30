@@ -1,4 +1,4 @@
-import { Response } from 'express'
+import { Response, Request } from 'express'
 import { prisma } from '../lib/prisma'
 import { AuthRequest } from '../middleware/auth'
 import { updateProfileSchema } from '../schemas/users.schema'
@@ -49,4 +49,25 @@ export async function updateProfile(req: AuthRequest, res: Response) {
   } catch {
     res.status(409).json({ error: 'Username já em uso' })
   }
+}
+
+export async function getPublicProfile(req: Request, res: Response) {
+  const username = req.params.username as string
+
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      avatar: true,
+      platform: true,
+      bio: true,
+      preferredOperators: true,
+      createdAt: true,
+      // propositadamente sem: email, password, ubisoftId
+    },
+  })
+
+  if (!user) return res.status(404).json({ error: 'Utilizador não encontrado' })
+  res.json(user)
 }
