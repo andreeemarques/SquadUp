@@ -17,7 +17,7 @@ const NAV_LINKS = [
 
 interface Notification {
   id: string
-  type: 'JOIN_REQUEST' | 'JOIN_ACCEPTED' | 'JOIN_DECLINED'
+  type: 'JOIN_REQUEST' | 'JOIN_ACCEPTED' | 'JOIN_DECLINED' | 'KICKED'
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
   read: boolean
   createdAt: string
@@ -197,6 +197,14 @@ export function Navbar() {
                                   recusou o teu pedido para entrar no squad
                                 </>
                               )}
+                              {n.type === 'KICKED' && (
+                              <>
+                                <Link href={`/profile/${n.actor.username}`} className="font-semibold hover:text-primary hover:underline" onClick={() => setNotifOpen(false)}>
+                                  {n.actor.username}
+                                </Link>{' '}
+                                removeu-te de um squad
+                              </>
+                            )}
                             </p>
                             {n.actor.ubisoftId && (
                               <p className="mt-0.5 text-xs text-muted-foreground">

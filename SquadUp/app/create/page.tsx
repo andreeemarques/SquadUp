@@ -21,6 +21,7 @@ export default function CreatePostPage() {
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
   const [loadingPost, setLoadingPost] = useState(!!editId)
+  const [acceptedCount, setAcceptedCount] = useState(0)
 
   const [platform, setPlatform] = useState<string>('PC')
   const [region, setRegion] = useState<string>('North America')
@@ -46,6 +47,7 @@ export default function CreatePostPage() {
         setMicRequired(post.micRequired)
         setPlayersNeeded(post.playersNeeded)
         setDescription(post.description)
+        setAcceptedCount(post.acceptedCount ?? 0)
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar post'))
       .finally(() => setLoadingPost(false))
@@ -205,7 +207,7 @@ export default function CreatePostPage() {
               variant="outline"
               size="icon"
               aria-label="Increase"
-              onClick={() => setPlayersNeeded((n) => Math.min(4, n + 1))}
+              onClick={() => setPlayersNeeded((n) => Math.min(4 - acceptedCount, n + 1))}
             >
               <Plus className="size-4" />
             </Button>
@@ -213,6 +215,11 @@ export default function CreatePostPage() {
               open {playersNeeded === 1 ? 'slot' : 'slots'}
             </span>
           </div>
+          {editId && acceptedCount > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {acceptedCount} player{acceptedCount === 1 ? '' : 's'} already joined — max {4 - acceptedCount} more slot{4 - acceptedCount === 1 ? '' : 's'} available.
+            </p>
+          )}
         </Field>
 
         <Field label="Description">

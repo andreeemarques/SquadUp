@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Clock, Users, Mic, MicOff, Globe, MapPin, Check, Loader2, Pencil, Trash2 } from 'lucide-react'
+import { Clock, Users, Mic, MicOff, Globe, MapPin, Check, Loader2, Pencil, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { RankBadge } from '@/components/rank-badge'
 import { PlatformIcon } from '@/components/platform-icon'
@@ -23,6 +23,7 @@ export function SquadCard({ post }: { post: SquadPost }) {
 
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
+  const [removingUsername, setRemovingUsername] = useState<string | null>(null)
 
   async function handleJoin() {
     if (!user) return
@@ -46,6 +47,18 @@ export function SquadCard({ post }: { post: SquadPost }) {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erro ao apagar')
       setDeleting(false)
+    }
+  }
+
+  async function handleRemoveMember(username: string) {
+    if (!confirm(`Remover ${username} deste squad?`)) return
+    setRemovingUsername(username)
+    try {
+      await apiFetch(`/squads/${post.id}/members/${username}`, { method: 'DELETE' })
+      window.location.reload()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao remover membro')
+      setRemovingUsername(null)
     }
   }
 
@@ -116,7 +129,48 @@ export function SquadCard({ post }: { post: SquadPost }) {
           )}
         </Chip>
       </div>
-
+      <div className="flex min-h-6 items-center gap-2">
+        {post.acceptedMembers && post.acceptedMembers.length > 0 ? (
+          <>
+            <div className="flex -space-x-2">
+              {post.acceptedMembers.slice(0, 4).map((member) => (
+                <div key={member.username} className="relative">
+                  <Link
+                    href={`/profile/${member.username}`}
+                    title={member.username}
+                    className="relative block size-6 overflow-hidden rounded-full border-2 border-card bg-secondary"
+                  >
+                    <Image
+                      src={member.avatar || '/placeholder-user.jpg'}
+                      alt={member.username}
+                      fill
+                      className="object-cover"
+                    />
+                  </Link>
+                  {isOwnPost && (
+                    <button
+                      type="button"
+                      aria-label={`Remove ${member.username}`}
+                      disabled={removingUsername === member.username}
+                      onClick={() => handleRemoveMember(member.username)}
+                      className="absolute -right-1 -top-1 flex size-3.5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm transition-transform hover:scale-110"
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {post.acceptedMembers.length === 1
+                ? `${post.acceptedMembers[0].username} joined`
+                : `${post.acceptedMembers.length} players joined`}
+            </span>
+          </>
+        ) : (
+          <span className="text-xs text-muted-foreground/60">No one has joined yet</span>
+        )}
+      </div>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border/60 pt-4">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">

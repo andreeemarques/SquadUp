@@ -61,6 +61,7 @@ export interface SquadPost {
   userId?: string
   requestStatus?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null
   editedMinutesAgo?: number | null
+  acceptedMembers?: { username: string; avatar: string | null }[]
   username: string
   avatar: string
   platform: Platform

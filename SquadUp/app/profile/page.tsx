@@ -5,11 +5,13 @@ import Image from 'next/image'
 import { Pencil, Save, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PlatformIcon } from '@/components/platform-icon'
-import { PLATFORMS, PROFILE, type Platform } from '@/lib/data'
+import { PLATFORMS, PROFILE, type Platform, type SquadPost as SquadPostType } from '@/lib/data'
 import { apiFetch } from '@/lib/api'
 import { useAuth, updateAuthUser } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { ATTACKERS, DEFENDERS } from '@/lib/operators'
+import { SquadCard } from '@/components/squad-card'
+import { mapApiPost, type ApiSquadPost } from '@/lib/squads'
 
 const AVATAR_OPTIONS = [
   '/avatars/operator-1.png',
@@ -37,6 +39,10 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [myPosts, setMyPosts] = useState<SquadPostType[]>([])
+  const [loadingPosts, setLoadingPosts] = useState(true)
+  const [postsPage, setPostsPage] = useState(1)
+  const POSTS_PAGE_SIZE = 4
 
   // campos editáveis
   const [username, setUsername] = useState('')
@@ -61,6 +67,19 @@ export default function ProfilePage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    apiFetch('/squads/mine')
+      .then((data: ApiSquadPost[]) => setMyPosts(data.map(mapApiPost)))
+      .catch(() => {})
+      .finally(() => setLoadingPosts(false))
+  }, [])
+
+  const postsTotalPages = Math.max(1, Math.ceil(myPosts.length / POSTS_PAGE_SIZE))
+  const paginatedPosts = myPosts.slice(
+    (postsPage - 1) * POSTS_PAGE_SIZE,
+    postsPage * POSTS_PAGE_SIZE,
+  )
 
   async function handleSave() {
     setSaving(true)
@@ -310,14 +329,65 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* As secções abaixo continuam com dados de exemplo (stats, histórico, reviews) 
-          porque o backend ainda não tem esses dados ligados a contas reais. */}
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-6 lg:col-span-2">
-          <Panel title="Statistics">
-            <p className="text-sm text-muted-foreground">
-              Estatísticas de jogo ainda não estão ligadas a contas reais — dados de exemplo.
-            </p>
+          <Panel title="My Squad Posts">
+            {loadingPosts ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : myPosts.length > 0 ? (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {paginatedPosts.map((post) => (
+                    <SquadCard key={post.id} post={post} />
+                  ))}
+                </div>
+
+                {postsTotalPages > 1 && (
+                  <div className="mt-6 flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={postsPage === 1}
+                      onClick={() => setPostsPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: postsTotalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setPostsPage(p)}
+                          className={cn(
+                            'flex size-8 items-center justify-center rounded-md text-sm font-medium transition-colors',
+                            p === postsPage
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground hover:bg-secondary',
+                          )}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={postsPage === postsTotalPages}
+                      onClick={() => setPostsPage((p) => Math.min(postsTotalPages, p + 1))}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Ainda não criaste nenhum squad post.
+              </p>
+            )}
           </Panel>
         </div>
         <div className="flex flex-col gap-6">

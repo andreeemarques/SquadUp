@@ -58,12 +58,14 @@ enum NotificationType {
   JOIN_REQUEST
   JOIN_ACCEPTED
   JOIN_DECLINED
+  KICKED
 }
 
 enum NotificationStatus {
   PENDING
   ACCEPTED
   DECLINED
+  REMOVED
 }
 
 enum Platform {
