@@ -1,8 +1,10 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import { prisma } from '../lib/prisma'
-import { registerSchema, loginSchema } from '../schemas/auth.schema'
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../schemas/auth.schema'
 import { signToken } from '../utils/jwt'
+import crypto from 'crypto'
+import { sendPasswordResetEmail } from '../lib/mailer'
 
 export async function register(req: Request, res: Response) {
   const parsed = registerSchema.safeParse(req.body)
@@ -57,4 +59,63 @@ export async function login(req: Request, res: Response) {
       avatar: user.avatar,
     },
   })
+}
+
+export async function forgotPassword(req: Request, res: Response) {
+  const parsed = forgotPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message })
+  }
+
+  const { email } = parsed.data
+  const user = await prisma.user.findUnique({ where: { email } })
+
+  // Resposta genérica sempre — não confirma se o email existe ou não (evita enumeração de contas)
+  const genericResponse = {
+    message: 'Se esse email existir, vais receber um link de recuperação.',
+  }
+
+  if (!user) return res.json(genericResponse)
+
+  const token = crypto.randomBytes(32).toString('hex')
+  const expiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { resetToken: token, resetTokenExpiry: expiry },
+  })
+
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`
+
+  try {
+    await sendPasswordResetEmail(user.email, resetUrl)
+  } catch (err) {
+    console.error('Erro ao enviar email de recuperação:', err)
+  }
+
+  res.json(genericResponse)
+}
+
+export async function resetPassword(req: Request, res: Response) {
+  const parsed = resetPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message })
+  }
+
+  const { token, password } = parsed.data
+
+  const user = await prisma.user.findUnique({ where: { resetToken: token } })
+
+  if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+    return res.status(400).json({ error: 'Link inválido ou expirado. Pede um novo.' })
+  }
+
+  const hashed = await bcrypt.hash(password, 10)
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashed, resetToken: null, resetTokenExpiry: null },
+  })
+
+  res.json({ success: true })
 }
