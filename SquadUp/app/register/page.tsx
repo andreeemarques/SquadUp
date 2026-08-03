@@ -10,6 +10,7 @@ import { PLATFORMS } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/lib/api'
 import { setAuthSession } from '@/lib/auth'
+import { checkPassword } from '@/lib/password'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -27,32 +28,31 @@ export default function RegisterPage() {
   const usernameError =
     username.length > 0 && username.length < 3
       ? 'Mínimo de 3 caracteres'
-      : null
+      : username.length > 20
+        ? 'Máximo de 20 caracteres'
+        : null
 
   const emailError =
     email.length > 0 && !EMAIL_REGEX.test(email)
       ? 'Email inválido'
       : null
 
-  const passwordError =
-    password.length > 0 && password.length < 8
-      ? `A password precisa de pelo menos 8 caracteres (${password.length}/8)`
-      : null
+  const passwordCheck = checkPassword(password)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
 
-    if (username.length < 3) {
-      setError('O username precisa de pelo menos 3 caracteres.')
+    if (username.length < 3 || username.length > 20) {
+      setError('O username precisa de ter entre 3 e 20 caracteres.')
       return
     }
     if (!EMAIL_REGEX.test(email)) {
       setError('Introduz um email válido.')
       return
     }
-    if (password.length < 8) {
-      setError('A password precisa de ter pelo menos 8 caracteres.')
+    if (!passwordCheck.valid) {
+      setError('A password precisa de pelo menos 8 caracteres, uma letra e um número.')
       return
     }
 
@@ -89,6 +89,7 @@ export default function RegisterPage() {
             type="text"
             placeholder="Your in-game name"
             autoComplete="username"
+            maxLength={20}
             required
             value={username}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
@@ -138,8 +139,7 @@ export default function RegisterPage() {
             ))}
           </div>
         </div>
-
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <AuthField
             label="Password"
             type="password"
@@ -149,7 +149,39 @@ export default function RegisterPage() {
             value={password}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
           />
-          {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
+
+          {password.length > 0 && (
+            <>
+              <div className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'h-1 flex-1 rounded-full transition-colors',
+                      passwordCheck.strength === 'weak' && i === 0
+                        ? 'bg-destructive'
+                        : passwordCheck.strength === 'medium' && i <= 1
+                          ? 'bg-yellow-500'
+                          : passwordCheck.strength === 'strong'
+                            ? 'bg-primary'
+                            : 'bg-border',
+                    )}
+                  />
+                ))}
+              </div>
+              <ul className="flex flex-col gap-0.5 text-xs">
+                <li className={passwordCheck.minLength ? 'text-primary' : 'text-muted-foreground'}>
+                  {passwordCheck.minLength ? '✓' : '·'} Pelo menos 8 caracteres
+                </li>
+                <li className={passwordCheck.hasLetter ? 'text-primary' : 'text-muted-foreground'}>
+                  {passwordCheck.hasLetter ? '✓' : '·'} Pelo menos uma letra
+                </li>
+                <li className={passwordCheck.hasNumber ? 'text-primary' : 'text-muted-foreground'}>
+                  {passwordCheck.hasNumber ? '✓' : '·'} Pelo menos um número
+                </li>
+              </ul>
+            </>
+          )}
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

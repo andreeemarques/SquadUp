@@ -62,9 +62,10 @@ export async function getPublicProfile(req: Request, res: Response) {
       avatar: true,
       platform: true,
       bio: true,
+      ubisoftId: true,
       preferredOperators: true,
       createdAt: true,
-      // propositadamente sem: email, password, ubisoftId
+      // continua sem: email, password
     },
   })
 

@@ -168,6 +168,7 @@ export default function ProfilePage() {
                   <input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    maxLength={20}
                     className="h-9 rounded-lg border border-border bg-background px-3 font-display text-xl font-bold outline-none focus:border-primary"
                   />
                 ) : (

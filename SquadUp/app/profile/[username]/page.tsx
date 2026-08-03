@@ -13,6 +13,7 @@ interface PublicProfile {
   avatar: string | null
   platform: string | null
   bio: string | null
+  ubisoftId: string | null
   preferredOperators: string[]
   createdAt: string
 }
@@ -48,6 +49,10 @@ export default function PublicProfilePage() {
     )
   }
 
+  const trackerUrl = profile.ubisoftId
+    ? `https://r6.tracker.network/r6siege/profile/ubi/${encodeURIComponent(profile.ubisoftId)}/overview`
+    : null
+
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <section className="overflow-hidden rounded-2xl border border-border bg-card">
@@ -71,6 +76,20 @@ export default function PublicProfilePage() {
                 <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                   <PlatformIcon platform={profile.platform as any} />
                   {profile.platform}
+                </div>
+              )}
+              {trackerUrl && (
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Ubisoft ID:</span>
+                  <span className="font-medium">{profile.ubisoftId}</span>
+                  <a
+                    href={trackerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    View stats
+                  </a>
                 </div>
               )}
             </div>
