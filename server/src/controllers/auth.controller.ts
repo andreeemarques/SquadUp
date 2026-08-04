@@ -110,6 +110,11 @@ export async function resetPassword(req: Request, res: Response) {
     return res.status(400).json({ error: 'Link inválido ou expirado. Pede um novo.' })
   }
 
+  const isSamePassword = await bcrypt.compare(password, user.password)
+  if (isSamePassword) {
+    return res.status(400).json({ error: 'A nova password tem de ser diferente da atual.' })
+  }
+
   const hashed = await bcrypt.hash(password, 10)
 
   await prisma.user.update({
