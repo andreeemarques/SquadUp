@@ -31,3 +31,11 @@ export const registerLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Demasiadas contas criadas a partir deste IP. Tenta novamente mais tarde.' },
 })
+
+export const resendVerificationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados pedidos. Tenta novamente mais tarde.' },
+})

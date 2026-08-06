@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [emailNotVerified, setEmailNotVerified] = useState(false)
+  const [resending, setResending] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -30,9 +32,29 @@ export default function LoginPage() {
       setAuthSession(data.token, data.user)
       router.push('/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao iniciar sessão')
+      const message = err instanceof Error ? err.message : 'Erro ao iniciar sessão'
+      if (message === 'EMAIL_NOT_VERIFIED') {
+        setEmailNotVerified(true)
+      } else {
+        setError(message)
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleResend() {
+    setResending(true)
+    try {
+      await apiFetch('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+      setError(null)
+    } catch {
+      // resposta genérica, sem revelar detalhes
+    } finally {
+      setResending(false)
     }
   }
 
@@ -72,6 +94,20 @@ export default function LoginPage() {
             className="h-11 w-full rounded-lg border border-border bg-card px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30"
           />
         </div>
+
+        {emailNotVerified && (
+          <div className="rounded-lg border border-border bg-secondary/40 p-3 text-sm">
+            A tua conta ainda não foi confirmada.{' '}
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="font-medium text-primary hover:underline"
+            >
+              {resending ? 'A reenviar...' : 'Reenviar email de confirmação'}
+            </button>
+          </div>
+        )}
 
         {error && (
           <p className="text-sm text-destructive">{error}</p>

@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { UserPlus } from 'lucide-react'
+import { UserPlus, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AuthShell, AuthField } from '@/components/auth-shell'
 import { PLATFORMS } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/lib/api'
-import { setAuthSession } from '@/lib/auth'
 import { checkPassword } from '@/lib/password'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -24,6 +23,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [registered, setRegistered] = useState(false)
 
   const usernameError =
     username.length > 0 && username.length < 3
@@ -63,18 +63,35 @@ export default function RegisterPage() {
         body: JSON.stringify({ username, email, password, ubisoftId, platform }),
       })
 
-      const loginData = await apiFetch('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      })
-
-      setAuthSession(loginData.token, loginData.user)
-      router.push('/')
+      setRegistered(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar conta')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (registered) {
+    return (
+      <AuthShell
+        title="Check your email"
+        subtitle="Falta só um passo para ativares a tua conta."
+      >
+        <div className="flex items-start gap-3 rounded-lg border border-border bg-secondary/40 p-4 text-sm">
+          <Mail className="mt-0.5 size-5 shrink-0 text-primary" />
+          <p>
+            Enviámos um link de confirmação para <strong>{email}</strong>. Clica
+            nele para ativares a tua conta. Verifica também a pasta de spam.
+          </p>
+        </div>
+        <Link
+          href="/login"
+          className="mt-6 block text-center text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Back to login
+        </Link>
+      </AuthShell>
+    )
   }
 
   return (
