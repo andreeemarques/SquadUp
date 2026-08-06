@@ -9,10 +9,19 @@ import {
   EMPTY_FILTERS,
   type Filters,
 } from '@/components/search-filters'
-import { type SquadPost } from '@/lib/data'
+import { type SquadPost, RANKS } from '@/lib/data'
 import { apiFetch, fromApiEnum } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { mapApiPost, type ApiSquadPost } from '@/lib/squads'
+import { useAuth } from '@/lib/auth'
+
+function rankDistance(rank: string, myRank: string | null | undefined) {
+  if (!myRank) return 0
+  const a = RANKS.indexOf(rank as any)
+  const b = RANKS.indexOf(myRank as any)
+  if (a === -1 || b === -1) return 0
+  return Math.abs(a - b)
+}
 
 export default function SearchPage() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
@@ -23,6 +32,8 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
+  const { user } = useAuth()
+  const [sortBy, setSortBy] = useState<'recent' | 'fewest' | 'rank'>('recent')
 
   useEffect(() => {
     apiFetch('/squads')
@@ -36,7 +47,7 @@ export default function SearchPage() {
 }, [filters, query])
 
   const results = useMemo(() => {
-    return posts.filter((post) => {
+    const filtered = posts.filter((post) => {
       if (filters.platforms.length && !filters.platforms.includes(post.platform))
         return false
       if (filters.regions.length && !filters.regions.includes(post.region))
@@ -59,7 +70,19 @@ export default function SearchPage() {
         return false
       return true
     })
-  }, [filters, query, posts])
+
+    const sorted = [...filtered]
+    if (sortBy === 'fewest') {
+      sorted.sort((a, b) => a.playersNeeded - b.playersNeeded)
+    } else if (sortBy === 'rank') {
+      sorted.sort(
+        (a, b) => rankDistance(a.rank, user?.rank) - rankDistance(b.rank, user?.rank),
+      )
+    }
+    // 'recent' não precisa de sort extra: a API já devolve por createdAt desc
+
+    return sorted
+  }, [filters, query, posts, sortBy, user?.rank])
 
   const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE))
   const paginatedResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -97,6 +120,17 @@ export default function SearchPage() {
                 className="h-11 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30"
               />
             </div>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'recent' | 'fewest' | 'rank')}
+                className="h-11 rounded-lg border border-border bg-card px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="recent">Most recent</option>
+                <option value="fewest">Fewest players needed</option>
+                {user?.rank && <option value="rank">Closest to my rank</option>}
+              </select>
+
             <Button
               variant="outline"
               className="h-11 lg:hidden"

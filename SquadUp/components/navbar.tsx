@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
+import { useToast } from '@/lib/toast'
+import { playNotificationSound } from '@/lib/sound'
 
 const NAV_LINKS = [
   { href: '/search', label: 'Find Squad' },
@@ -35,18 +37,42 @@ export function Navbar() {
   const [respondingId, setRespondingId] = useState<string | null>(null)
   const notifRef = useRef<HTMLDivElement>(null)
 
+  const { showToast } = useToast()
+  const seenIds = useRef<Set<string> | null>(null)
+
   const loadNotifications = useCallback(() => {
     if (!user) return
     apiFetch('/notifications')
       .then((data: { notifications: Notification[]; unreadCount: number }) => {
+        // Primeira carga: só regista o que já existe, sem disparar toasts (evita "spam" ao abrir a app)
+        if (seenIds.current === null) {
+          seenIds.current = new Set(data.notifications.map((n) => n.id))
+        } else {
+          const newOnes = data.notifications.filter((n) => !seenIds.current!.has(n.id))
+          newOnes.forEach((n) => {
+            seenIds.current!.add(n.id)
+            const title =
+              n.type === 'JOIN_REQUEST'
+                ? `${n.actor.username} quer juntar-se ao teu squad`
+                : n.type === 'JOIN_ACCEPTED'
+                  ? `${n.actor.username} aceitou o teu pedido`
+                  : n.type === 'JOIN_DECLINED'
+                    ? `${n.actor.username} recusou o teu pedido`
+                    : `${n.actor.username} removeu-te de um squad`
+            showToast({ title })
+          })
+          if (newOnes.length > 0) playNotificationSound()
+        }
         setNotifications(data.notifications)
         setUnreadCount(data.unreadCount)
       })
       .catch(() => {})
-  }, [user])
+  }, [user, showToast])
 
   useEffect(() => {
     loadNotifications()
+    const interval = setInterval(loadNotifications, 15000) // a cada 15 segundos
+    return () => clearInterval(interval)
   }, [loadNotifications])
 
   useEffect(() => {

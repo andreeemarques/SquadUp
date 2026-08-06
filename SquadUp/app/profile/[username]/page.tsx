@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { PlatformIcon } from '@/components/platform-icon'
 import { apiFetch } from '@/lib/api'
+import { RankBadge } from '@/components/rank-badge'
 
 interface PublicProfile {
   id: string
@@ -16,6 +17,7 @@ interface PublicProfile {
   ubisoftId: string | null
   preferredOperators: string[]
   createdAt: string
+  rank: string | null
 }
 
 export default function PublicProfilePage() {
@@ -72,12 +74,15 @@ export default function PublicProfilePage() {
               <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
                 {profile.username}
               </h1>
-              {profile.platform && (
-                <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <PlatformIcon platform={profile.platform as any} />
-                  {profile.platform}
-                </div>
-              )}
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                {profile.platform && (
+                  <span className="flex items-center gap-1.5">
+                    <PlatformIcon platform={profile.platform as any} />
+                    {profile.platform}
+                  </span>
+                )}
+                {profile.rank && <RankBadge rank={profile.rank as any} />}
+              </div>
               {trackerUrl && (
                 <div className="mt-2 flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">Ubisoft ID:</span>

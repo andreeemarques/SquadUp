@@ -14,10 +14,15 @@ const ALL_OPERATORS = [
   'Thunderbird', 'Tubarão', 'Valkyrie', 'Vigil', 'Wamai', 'Warden',
 ] as const
 
+const rankEnum = z.enum([
+  'Copper', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Champion',
+])
+
 export const updateProfileSchema = z.object({
   username: z.string().min(3).max(20).optional(),
   ubisoftId: z.string().min(2).max(50).optional(),
   platform: platformEnum.optional(),
+  rank: rankEnum.optional(),
   bio: z.string().max(300).optional(),
   avatar: z.enum([
     '/avatars/operator-1.png',
@@ -25,7 +30,7 @@ export const updateProfileSchema = z.object({
     '/avatars/operator-3.png',
     '/avatars/operator-4.png',
   ]).optional(),
-  preferredOperators: z.array(z.enum(ALL_OPERATORS)).max(8).optional(),
+  preferredOperators: z.array(z.string()).max(8).optional(),
 })
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>

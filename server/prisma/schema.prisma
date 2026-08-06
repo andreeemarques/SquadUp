@@ -15,6 +15,7 @@ model User {
   avatar             String?
   ubisoftId          String?
   platform           Platform?
+  rank               Rank?
   bio                String?
   preferredOperators String[]    @default([])
   resetToken         String?     @unique

@@ -5,13 +5,14 @@ import Image from 'next/image'
 import { Pencil, Save, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PlatformIcon } from '@/components/platform-icon'
-import { PLATFORMS, PROFILE, type Platform, type SquadPost as SquadPostType } from '@/lib/data'
+import { PLATFORMS, PROFILE, type Platform, type SquadPost as SquadPostType, RANKS } from '@/lib/data'
 import { apiFetch } from '@/lib/api'
 import { useAuth, updateAuthUser } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { ATTACKERS, DEFENDERS } from '@/lib/operators'
 import { SquadCard } from '@/components/squad-card'
 import { mapApiPost, type ApiSquadPost } from '@/lib/squads'
+import { RankBadge } from '@/components/rank-badge'
 
 const AVATAR_OPTIONS = [
   '/avatars/operator-1.png',
@@ -30,6 +31,7 @@ interface FullProfile {
   bio: string | null
   createdAt: string
   preferredOperators: string[]
+  rank: string | null
 }
 
 export default function ProfilePage() {
@@ -52,6 +54,7 @@ export default function ProfilePage() {
   const [avatar, setAvatar] = useState('')
   const [preferredOperators, setPreferredOperators] = useState<string[]>([])
   const [operatorSearch, setOperatorSearch] = useState('')
+  const [rank, setRank] = useState('Copper')
 
   useEffect(() => {
     apiFetch('/users/me')
@@ -63,6 +66,7 @@ export default function ProfilePage() {
         setBio(data.bio ?? '')
         setAvatar(data.avatar ?? '')
         setPreferredOperators(data.preferredOperators ?? [])
+        setRank(data.rank ?? 'Copper')
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
@@ -87,7 +91,7 @@ export default function ProfilePage() {
     try {
       const updated: FullProfile = await apiFetch('/users/me', {
         method: 'PATCH',
-        body: JSON.stringify({ username, ubisoftId, platform, bio, avatar, preferredOperators }),
+        body: JSON.stringify({ username, ubisoftId, platform, rank, bio, avatar, preferredOperators }),
       })
       setProfile(updated)
       updateAuthUser({
@@ -97,6 +101,7 @@ export default function ProfilePage() {
         ubisoftId: updated.ubisoftId,
         platform: updated.platform,
         avatar: updated.avatar,
+        rank: updated.rank,
       })
       setEditing(false)
     } catch (err) {
@@ -116,6 +121,7 @@ export default function ProfilePage() {
     setError(null)
     setAvatar(profile.avatar ?? '')
     setPreferredOperators(profile.preferredOperators ?? [])
+    setRank(profile.rank ?? 'Copper')
   }
 
   function toggleOperator(name: string) {
@@ -181,6 +187,7 @@ export default function ProfilePage() {
                     {profile.platform && <PlatformIcon platform={profile.platform} />}
                     {profile.platform ?? 'Sem plataforma definida'}
                   </span>
+                  {profile.rank && <RankBadge rank={profile.rank as any} />}
                 </div>
               </div>
             </div>
@@ -295,6 +302,27 @@ export default function ProfilePage() {
                       )}
                     >
                       {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-muted-foreground">Your rank</label>
+                <div className="flex flex-wrap gap-2">
+                  {RANKS.map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRank(r)}
+                      className={cn(
+                        'rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
+                        rank === r
+                          ? 'border-primary bg-primary/15 text-primary'
+                          : 'border-border text-muted-foreground hover:border-primary/40',
+                      )}
+                    >
+                      {r}
                     </button>
                   ))}
                 </div>

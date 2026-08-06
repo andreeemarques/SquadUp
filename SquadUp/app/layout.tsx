@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Rajdhani, Inter } from 'next/font/google'
 import { Navbar } from '@/components/navbar'
 import './globals.css'
+import { ToastProvider } from '@/lib/toast'
 
 const rajdhani = Rajdhani({
   subsets: ['latin'],
@@ -35,8 +36,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${rajdhani.variable} ${inter.variable}`}>
       <body className="bg-background font-sans antialiased">
-        <Navbar />
-        {children}
+        <ToastProvider>
+          <Navbar />
+          {children}
+        </ToastProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

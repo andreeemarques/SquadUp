@@ -27,6 +27,7 @@ export async function register(req: Request, res: Response) {
       ubisoftId: user.ubisoftId,
       platform: user.platform,
       avatar: user.avatar,
+      rank: user.rank,
     })
   } catch {
     res.status(409).json({ error: 'Username ou email já existem' })
@@ -57,6 +58,7 @@ export async function login(req: Request, res: Response) {
       ubisoftId: user.ubisoftId,
       platform: user.platform,
       avatar: user.avatar,
+      rank: user.rank,
     },
   })
 }

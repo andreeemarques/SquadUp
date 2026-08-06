@@ -16,6 +16,7 @@ export async function getProfile(req: AuthRequest, res: Response) {
       bio: true,
       preferredOperators: true,
       createdAt: true,
+      rank: true,
     },
   })
 
@@ -43,6 +44,7 @@ export async function updateProfile(req: AuthRequest, res: Response) {
         bio: true,
         preferredOperators: true,
         createdAt: true,
+        rank: true,
       },
     })
     res.json(user)
@@ -65,7 +67,7 @@ export async function getPublicProfile(req: Request, res: Response) {
       ubisoftId: true,
       preferredOperators: true,
       createdAt: true,
-      // continua sem: email, password
+      rank: true,
     },
   })
 
