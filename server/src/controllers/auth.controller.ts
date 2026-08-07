@@ -5,6 +5,7 @@ import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema,
 import { signToken } from '../utils/jwt'
 import crypto from 'crypto'
 import { sendPasswordResetEmail, sendVerificationEmail } from '../lib/mailer'
+import { hashToken } from '../utils/hash'
 
 export async function register(req: Request, res: Response) {
   const parsed = registerSchema.safeParse(req.body)
@@ -15,7 +16,7 @@ export async function register(req: Request, res: Response) {
   const { username, email, password, ubisoftId, platform } = parsed.data
   const hashed = await bcrypt.hash(password, 10)
 
-  const verificationToken = crypto.randomBytes(32).toString('hex')
+  const rawVerificationToken = crypto.randomBytes(32).toString('hex')
   const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
   try {
@@ -26,12 +27,12 @@ export async function register(req: Request, res: Response) {
         password: hashed,
         ubisoftId,
         platform,
-        verificationToken,
+        verificationToken: hashToken(rawVerificationToken),
         verificationTokenExpiry,
       },
     })
 
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${rawVerificationToken}`
     try {
       await sendVerificationEmail(user.email, verifyUrl)
     } catch (err) {
@@ -94,15 +95,15 @@ export async function forgotPassword(req: Request, res: Response) {
 
   if (!user) return res.json(genericResponse)
 
-  const token = crypto.randomBytes(32).toString('hex')
-  const expiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+  const rawToken = crypto.randomBytes(32).toString('hex')
+  const expiry = new Date(Date.now() + 60 * 60 * 1000)
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { resetToken: token, resetTokenExpiry: expiry },
+    data: { resetToken: hashToken(rawToken), resetTokenExpiry: expiry },
   })
 
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${rawToken}`
 
   try {
     await sendPasswordResetEmail(user.email, resetUrl)
@@ -121,7 +122,7 @@ export async function resetPassword(req: Request, res: Response) {
 
   const { token, password } = parsed.data
 
-  const user = await prisma.user.findUnique({ where: { resetToken: token } })
+  const user = await prisma.user.findUnique({ where: { resetToken: hashToken(token) } })
 
   if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
     return res.status(400).json({ error: 'Link inválido ou expirado. Pede um novo.' })
@@ -149,7 +150,7 @@ export async function verifyEmail(req: Request, res: Response) {
   }
 
   const { token } = parsed.data
-  const user = await prisma.user.findUnique({ where: { verificationToken: token } })
+  const user = await prisma.user.findUnique({ where: { verificationToken: hashToken(token) } })
 
   if (!user || !user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
     return res.status(400).json({ error: 'Link inválido ou expirado. Pede um novo.' })
@@ -190,15 +191,15 @@ export async function resendVerification(req: Request, res: Response) {
 
   if (!user || user.emailVerified) return res.json(genericResponse)
 
-  const verificationToken = crypto.randomBytes(32).toString('hex')
+  const rawVerificationToken = crypto.randomBytes(32).toString('hex')
   const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { verificationToken, verificationTokenExpiry },
+    data: { verificationToken: hashToken(rawVerificationToken), verificationTokenExpiry },
   })
 
-  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`
+  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${rawVerificationToken}`
   try {
     await sendVerificationEmail(user.email, verifyUrl)
   } catch (err) {
