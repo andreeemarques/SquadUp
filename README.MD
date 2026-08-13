@@ -151,9 +151,9 @@ The app is available at `http://localhost:3000`.
 
 ## Design decisions
 
-- **Post rank vs. owner's rank** — a `SquadPost`'s `rank` field represents the rank required for the squad, independent of the creator's personal rank, allowing for mixed-rank requests.
-- **Notifications without WebSockets** — I chose polling (every 15s) instead of WebSockets/Server-Sent Events, since it's sufficient for the expected volume and simpler to maintain; documented as a possible future improvement (Web Push).
-- **Hashed security tokens** — password reset and email verification tokens are never stored in plain text in the database, only their SHA-256 hash, to limit the impact of a potential data breach.
+- **Post rank vs. owner's rank** - a `SquadPost`'s `rank` field represents the rank required for the squad, independent of the creator's personal rank, allowing for mixed-rank requests.
+- **Notifications without WebSockets** - I chose polling (every 15s) instead of WebSockets/Server-Sent Events, since it's sufficient for the expected volume and simpler to maintain; documented as a possible future improvement (Web Push).
+- **Hashed security tokens** - password reset and email verification tokens are never stored in plain text in the database, only their SHA-256 hash, to limit the impact of a potential data breach.
 
 ---
 
@@ -168,4 +168,4 @@ The app is available at `http://localhost:3000`.
 
 ## Author
 
-Built by [your name] as a portfolio project.
+Built by André Marques as a portfolio project.
