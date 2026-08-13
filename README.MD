@@ -3,7 +3,7 @@
 SquadUp is a web application designed for Rainbow Six Siege players to easily find teammates. Users can create squad posts, browse active requests, filter by platform, rank, region, game mode, and language, and connect with players who match their preferred playstyle.
 
 
-**[View live demo →](#)** <[!-- link after deploy --](https://squad-up-eta.vercel.app/)>
+**[View live demo →](https://squad-up-eta.vercel.app/)**
 
 ---
 
