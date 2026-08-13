@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { Mic, Minus, Plus, Send, CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import { apiFetch, toApiEnum, fromApiEnum } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export default function CreatePostPage() {
+function CreatePostForm() {
   const { user, loading: authLoading } = useAuth()
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
@@ -277,6 +277,18 @@ export default function CreatePostPage() {
         </div>
       </form>
     </main>
+  )
+}
+
+export default function CreatePostPage() {
+  return (
+    <Suspense fallback={
+      <main className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </main>
+    }>
+      <CreatePostForm />
+    </Suspense>
   )
 }
 
