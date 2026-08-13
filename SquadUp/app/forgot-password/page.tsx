@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
       })
       setSent(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao enviar pedido')
+      setError(err instanceof Error ? err.message : 'Error sending request')
     } finally {
       setLoading(false)
     }
@@ -37,8 +37,7 @@ export default function ForgotPasswordPage() {
     >
       {sent ? (
         <div className="rounded-lg border border-border bg-secondary/40 p-4 text-sm">
-          Se esse email existir na nossa base de dados, vais receber um link de
-          recuperação em breve. Verifica também a pasta de spam.
+          If this email exists in our database, you will receive a password reset link shortly. Please also check your spam folder.
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -56,7 +55,7 @@ export default function ForgotPasswordPage() {
 
           <Button type="submit" size="lg" className="mt-2 w-full" disabled={loading}>
             <Mail className="size-4" />
-            {loading ? 'A enviar...' : 'Send reset link'}
+            {loading ? 'Sending...' : 'Send reset link'}
           </Button>
         </form>
       )}

@@ -36,14 +36,14 @@ export async function register(req: Request, res: Response) {
     try {
       await sendVerificationEmail(user.email, verifyUrl)
     } catch (err) {
-      console.error('Erro ao enviar email de verificação:', err)
+      console.error('Error sending verification email:', err)
     }
 
     res.status(201).json({
-      message: 'Conta criada. Verifica o teu email para ativares a conta.',
+      message: 'Account created. Please check your email to verify your account.',
     })
   } catch {
-    res.status(409).json({ error: 'Username ou email já existem' })
+    res.status(409).json({ error: 'Username or email already exists' })
   }
 }
 
@@ -57,7 +57,7 @@ export async function login(req: Request, res: Response) {
   const user = await prisma.user.findUnique({ where: { email } })
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).json({ error: 'Credenciais inválidas' })
+    return res.status(401).json({ error: 'Invalid credentials' })
   }
 
   if (!user.emailVerified) {
@@ -88,9 +88,9 @@ export async function forgotPassword(req: Request, res: Response) {
   const { email } = parsed.data
   const user = await prisma.user.findUnique({ where: { email } })
 
-  // Resposta genérica sempre — não confirma se o email existe ou não (evita enumeração de contas)
+  // Always a generic response — does not confirm whether the email exists (prevents account enumeration).
   const genericResponse = {
-    message: 'Se esse email existir, vais receber um link de recuperação.',
+    message: 'If that email exists, you will receive a password reset link.',
   }
 
   if (!user) return res.json(genericResponse)
@@ -108,7 +108,7 @@ export async function forgotPassword(req: Request, res: Response) {
   try {
     await sendPasswordResetEmail(user.email, resetUrl)
   } catch (err) {
-    console.error('Erro ao enviar email de recuperação:', err)
+    console.error('Error sending password reset email:', err)
   }
 
   res.json(genericResponse)
@@ -125,12 +125,12 @@ export async function resetPassword(req: Request, res: Response) {
   const user = await prisma.user.findUnique({ where: { resetToken: hashToken(token) } })
 
   if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
-    return res.status(400).json({ error: 'Link inválido ou expirado. Pede um novo.' })
+    return res.status(400).json({ error: 'Invalid or expired link. Please request a new one.' })
   }
 
   const isSamePassword = await bcrypt.compare(password, user.password)
   if (isSamePassword) {
-    return res.status(400).json({ error: 'A nova password tem de ser diferente da atual.' })
+    return res.status(400).json({ error: 'The new password must be different from the current one.' })
   }
 
   const hashed = await bcrypt.hash(password, 10)
@@ -153,7 +153,7 @@ export async function verifyEmail(req: Request, res: Response) {
   const user = await prisma.user.findUnique({ where: { verificationToken: hashToken(token) } })
 
   if (!user || !user.verificationTokenExpiry || user.verificationTokenExpiry < new Date()) {
-    return res.status(400).json({ error: 'Link inválido ou expirado. Pede um novo.' })
+    return res.status(400).json({ error: 'Invalid or expired link. Please request a new one.' })
   }
 
   await prisma.user.update({
@@ -186,7 +186,7 @@ export async function resendVerification(req: Request, res: Response) {
   const user = await prisma.user.findUnique({ where: { email } })
 
   const genericResponse = {
-    message: 'Se essa conta existir e ainda não estiver verificada, vais receber um novo email.',
+    message: 'If this account exists and has not yet been verified, you will receive a new email.',
   }
 
   if (!user || user.emailVerified) return res.json(genericResponse)
@@ -203,7 +203,7 @@ export async function resendVerification(req: Request, res: Response) {
   try {
     await sendVerificationEmail(user.email, verifyUrl)
   } catch (err) {
-    console.error('Erro ao reenviar email de verificação:', err)
+    console.error('Error resending verification email:', err)
   }
 
   res.json(genericResponse)

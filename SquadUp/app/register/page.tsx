@@ -27,14 +27,14 @@ export default function RegisterPage() {
 
   const usernameError =
     username.length > 0 && username.length < 3
-      ? 'Mínimo de 3 caracteres'
+      ? 'Minimum of 3 characters'
       : username.length > 20
-        ? 'Máximo de 20 caracteres'
+        ? 'Maximum of 20 characters'
         : null
 
   const emailError =
     email.length > 0 && !EMAIL_REGEX.test(email)
-      ? 'Email inválido'
+      ? 'Invalid email'
       : null
 
   const passwordCheck = checkPassword(password)
@@ -44,15 +44,15 @@ export default function RegisterPage() {
     setError(null)
 
     if (username.length < 3 || username.length > 20) {
-      setError('O username precisa de ter entre 3 e 20 caracteres.')
+      setError('Username must be between 3 and 20 characters.')
       return
     }
     if (!EMAIL_REGEX.test(email)) {
-      setError('Introduz um email válido.')
+      setError('Please enter a valid email.')
       return
     }
     if (!passwordCheck.valid) {
-      setError('A password precisa de pelo menos 8 caracteres, uma letra e um número.')
+      setError('Password must be at least 8 characters long and include a letter and a number.')
       return
     }
 
@@ -65,7 +65,7 @@ export default function RegisterPage() {
 
       setRegistered(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar conta')
+      setError(err instanceof Error ? err.message : 'Error creating account')
     } finally {
       setLoading(false)
     }
@@ -75,13 +75,13 @@ export default function RegisterPage() {
     return (
       <AuthShell
         title="Check your email"
-        subtitle="Falta só um passo para ativares a tua conta."
+        subtitle="You're almost done! Just one more step to activate your account."
       >
         <div className="flex items-start gap-3 rounded-lg border border-border bg-secondary/40 p-4 text-sm">
           <Mail className="mt-0.5 size-5 shrink-0 text-primary" />
           <p>
-            Enviámos um link de confirmação para <strong>{email}</strong>. Clica
-            nele para ativares a tua conta. Verifica também a pasta de spam.
+            We sent a confirmation link to <strong>{email}</strong>. Click
+            it to activate your account. Also check the spam folder.
           </p>
         </div>
         <Link
@@ -188,13 +188,13 @@ export default function RegisterPage() {
               </div>
               <ul className="flex flex-col gap-0.5 text-xs">
                 <li className={passwordCheck.minLength ? 'text-primary' : 'text-muted-foreground'}>
-                  {passwordCheck.minLength ? '✓' : '·'} Pelo menos 8 caracteres
+                  {passwordCheck.minLength ? '✓' : '·'} At least 8 characters
                 </li>
                 <li className={passwordCheck.hasLetter ? 'text-primary' : 'text-muted-foreground'}>
-                  {passwordCheck.hasLetter ? '✓' : '·'} Pelo menos uma letra
+                  {passwordCheck.hasLetter ? '✓' : '·'} At least one letter
                 </li>
                 <li className={passwordCheck.hasNumber ? 'text-primary' : 'text-muted-foreground'}>
-                  {passwordCheck.hasNumber ? '✓' : '·'} Pelo menos um número
+                  {passwordCheck.hasNumber ? '✓' : '·'} At least one number
                 </li>
               </ul>
             </>
@@ -214,7 +214,7 @@ export default function RegisterPage() {
 
         <Button type="submit" size="lg" className="mt-2 w-full" disabled={loading}>
           <UserPlus className="size-4" />
-          {loading ? 'A criar conta...' : 'Create Account'}
+          {loading ? 'Creating account...' : 'Create Account'}
         </Button>
       </form>
 

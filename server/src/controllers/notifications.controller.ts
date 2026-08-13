@@ -31,16 +31,16 @@ export async function respondToNotification(req: AuthRequest, res: Response) {
   const { action } = req.body as { action: 'accept' | 'decline' }
 
   if (action !== 'accept' && action !== 'decline') {
-    return res.status(400).json({ error: 'Ação inválida' })
+    return res.status(400).json({ error: 'Invalid action' })
   }
 
   const notification = await prisma.notification.findUnique({ where: { id } })
-  if (!notification) return res.status(404).json({ error: 'Notificação não encontrada' })
+  if (!notification) return res.status(404).json({ error: 'Notification not found' })
   if (notification.recipientId !== req.userId) {
-    return res.status(403).json({ error: 'Sem permissão para responder a esta notificação' })
+    return res.status(403).json({ error: 'You are not the recipient of this notification' })
   }
   if (notification.status !== 'PENDING') {
-    return res.status(409).json({ error: 'Este pedido já foi respondido' })
+    return res.status(409).json({ error: 'This request has already been answered.' })
   }
 
   const updated = await prisma.notification.update({
@@ -58,7 +58,7 @@ export async function respondToNotification(req: AuthRequest, res: Response) {
     })
   }
 
-  // Notifica quem pediu para entrar, para ele saber o resultado
+  // Notifies the person who requested to join so they know the outcome.
   await prisma.notification.create({
     data: {
       recipientId: notification.actorId,

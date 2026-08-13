@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer'
 export const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
-  secure: true, // necessário na porta 465
+  secure: true, // required on port 465
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -28,7 +28,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="color-scheme" content="dark light">
 <meta name="supported-color-schemes" content="dark light">
-<title>Recuperação de password</title>
+<title>Password recovery</title>
 <!--[if mso]>
 <noscript>
 <xml>
@@ -48,7 +48,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 </head>
 <body style="margin:0; padding:0; background-color:${BACKGROUND_COLOR};">
   <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
-    Recebemos um pedido para repor a tua password no SquadUp. Este link expira em 1 hora.
+    We received a request to reset your password for your SquadUp account. This link will expire in 1 hour.
   </div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${BACKGROUND_COLOR};">
@@ -83,7 +83,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
                 </tr>
                 <tr>
                   <td style="font-family:Arial, sans-serif; font-size:14px; line-height:22px; color:${MUTED_COLOR}; padding-bottom:24px;">
-                    Recebemos um pedido para repor a password da tua conta SquadUp. Clica no botão abaixo para escolheres uma nova password. Este link expira em <strong style="color:${TEXT_COLOR};">1 hora</strong>.
+                    We received a request to reset the password for your SquadUp account. Click the button below to choose a new password. This link expires in <strong style="color:${TEXT_COLOR};">1 hour</strong>.
                   </td>
                 </tr>
                 <tr>
@@ -103,7 +103,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
                 </tr>
                 <tr>
                   <td style="font-family:Arial, sans-serif; font-size:12px; line-height:18px; color:${MUTED_COLOR}; word-break:break-all;">
-                    Ou copia este link para o browser:<br>
+                    Or copy this link to your browser:<br>
                     <a href="${resetUrl}" style="color:${PRIMARY_COLOR}; text-decoration:underline;">${resetUrl}</a>
                   </td>
                 </tr>
@@ -114,7 +114,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
           <!-- Footer -->
           <tr>
             <td align="center" style="padding-top:24px; font-family:Arial, sans-serif; font-size:12px; line-height:18px; color:${MUTED_COLOR};">
-              Se não pediste esta alteração, podes ignorar este email com segurança — a tua password não vai ser alterada.
+              If you did not request this change, you can safely ignore this email - your password will not be changed.
               <br><br>
               &copy; ${new Date().getFullYear()} SquadUp
             </td>
@@ -128,19 +128,19 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 </html>
 `.trim()
 
-  const text = `Recuperação de password — SquadUp
+  const text = `Password recovery — SquadUp
 
-Recebemos um pedido para repor a password da tua conta.
-Abre este link para escolheres uma nova password (expira em 1 hora):
+We received a request to reset the password for your SquadUp account.
+Open this link to choose a new password (expires in 1 hour):
 
 ${resetUrl}
 
-Se não pediste esta alteração, ignora este email.`
+If you did not request this change, you can safely ignore this email.`
 
   await transporter.sendMail({
     from: `"SquadUp" <${process.env.SMTP_USER}>`,
     to,
-    subject: 'Recuperação de password — SquadUp',
+    subject: 'Password recovery - SquadUp',
     html,
     text,
   })
@@ -155,7 +155,7 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
 <meta name="supported-color-schemes" content="dark light">
-<title>Confirma o teu email</title>
+<title>Confirm your email</title>
 <style>
   body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
   table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
@@ -164,7 +164,7 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
 </head>
 <body style="margin:0; padding:0; background-color:${BACKGROUND_COLOR};">
   <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
-    Falta um passo para ativares a tua conta SquadUp.
+    You have one more step to activate your SquadUp account.
   </div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${BACKGROUND_COLOR};">
     <tr>
@@ -194,7 +194,7 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
                 </tr>
                 <tr>
                   <td style="font-family:Arial, sans-serif; font-size:14px; line-height:22px; color:${MUTED_COLOR}; padding-bottom:24px;">
-                    Falta só um passo para ativares a tua conta SquadUp. Clica no botão abaixo para confirmares o teu email. Este link expira em <strong style="color:${TEXT_COLOR};">24 horas</strong>.
+                    You're just one step away from activating your SquadUp account. Click the button below to confirm your email. This link expires in <strong style="color:${TEXT_COLOR};">24 hours</strong>.
                   </td>
                 </tr>
                 <tr>
@@ -214,7 +214,7 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
                 </tr>
                 <tr>
                   <td style="font-family:Arial, sans-serif; font-size:12px; line-height:18px; color:${MUTED_COLOR}; word-break:break-all;">
-                    Ou copia este link para o browser:<br>
+                    Or copy this link to your browser:<br>
                     <a href="${verifyUrl}" style="color:${PRIMARY_COLOR}; text-decoration:underline;">${verifyUrl}</a>
                   </td>
                 </tr>
@@ -223,7 +223,7 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
           </tr>
           <tr>
             <td align="center" style="padding-top:24px; font-family:Arial, sans-serif; font-size:12px; line-height:18px; color:${MUTED_COLOR};">
-              Se não criaste uma conta no SquadUp, podes ignorar este email.
+              If you haven't created a SquadUp account, you can ignore this email.
               <br><br>
               &copy; ${new Date().getFullYear()} SquadUp
             </td>
@@ -236,19 +236,19 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
 </html>
 `.trim()
 
-  const text = `Confirma o teu email — SquadUp
+  const text = `Confirm your email - SquadUp
 
-Falta só um passo para ativares a tua conta.
-Abre este link para confirmares o teu email (expira em 24 horas):
+You have one more step to activate your SquadUp account.
+Open this link to confirm your email (expires in 24 hours):
 
 ${verifyUrl}
 
-Se não criaste uma conta no SquadUp, ignora este email.`
+If you haven't created a SquadUp account, you can ignore this email.`
 
   await transporter.sendMail({
     from: `"SquadUp" <${process.env.SMTP_USER}>`,
     to,
-    subject: 'Confirma o teu email — SquadUp',
+    subject: 'Confirm your email - SquadUp',
     html,
     text,
   })

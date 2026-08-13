@@ -20,7 +20,7 @@ export async function getProfile(req: AuthRequest, res: Response) {
     },
   })
 
-  if (!user) return res.status(404).json({ error: 'Utilizador não encontrado' })
+  if (!user) return res.status(404).json({ error: 'User not found' })
   res.json(user)
 }
 
@@ -49,7 +49,7 @@ export async function updateProfile(req: AuthRequest, res: Response) {
     })
     res.json(user)
   } catch {
-    res.status(409).json({ error: 'Username já em uso' })
+    res.status(409).json({ error: 'Username already in use' })
   }
 }
 
@@ -71,6 +71,6 @@ export async function getPublicProfile(req: Request, res: Response) {
     },
   })
 
-  if (!user) return res.status(404).json({ error: 'Utilizador não encontrado' })
+  if (!user) return res.status(404).json({ error: 'User not found' })
   res.json(user)
 }

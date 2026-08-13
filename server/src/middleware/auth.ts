@@ -10,7 +10,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   const token = authHeader?.split(' ')[1]
 
   if (!token) {
-    return res.status(401).json({ error: 'Sem token de autenticação' })
+    return res.status(401).json({ error: 'No authentication token provided' })
   }
 
   try {
@@ -18,11 +18,11 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     req.userId = payload.userId
     next()
   } catch {
-    res.status(401).json({ error: 'Token inválido ou expirado' })
+    res.status(401).json({ error: 'Invalid or expired token' })
   }
 }
 
-// Não bloqueia o pedido se não houver token — só preenche req.userId quando existir
+// It does not block the request if there is no token - it only populates `req.userId` when one is present.
 export function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
   const token = authHeader?.split(' ')[1]
@@ -32,7 +32,7 @@ export function optionalAuth(req: AuthRequest, res: Response, next: NextFunction
       const payload = verifyToken(token)
       req.userId = payload.userId
     } catch {
-      // token inválido -> ignora, trata como visitante sem sessão
+      // invalid token -> ignore, treat as a visitor without a session
     }
   }
 

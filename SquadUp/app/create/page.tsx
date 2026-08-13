@@ -49,7 +49,7 @@ export default function CreatePostPage() {
         setDescription(post.description)
         setAcceptedCount(post.acceptedCount ?? 0)
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar post'))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Error loading post'))
       .finally(() => setLoadingPost(false))
   }, [editId])
 
@@ -58,7 +58,7 @@ export default function CreatePostPage() {
     setError(null)
 
     if (description.trim().length === 0) {
-      setError('Escreve uma descrição para o teu squad post.')
+      setError('Write a description for your squad post.')
       return
     }
 
@@ -82,23 +82,23 @@ export default function CreatePostPage() {
       }
       setSubmitted(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao publicar o post')
+      setError(err instanceof Error ? err.message : 'Error publishing post')
     } finally {
       setSubmitting(false)
     }
   }
-  // Ainda a carregar info de sessão -> evita "flash" de conteúdo errado
+  // Still loading session info -> prevents "flash" of incorrect content
   if (authLoading) return null
 
-  // Sem sessão -> não faz sentido publicar sem conta
+  // No session -> it makes no sense to post without an account
   if (!user) {
     return (
       <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-lg flex-col items-center justify-center px-4 py-16 text-center">
         <h1 className="font-display text-2xl font-bold tracking-tight">
-          Precisas de ter sessão iniciada
+          You need to be logged in
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Cria uma conta ou faz login para publicar um squad post.
+          Create an account or log in to publish a squad post.
         </p>
         <div className="mt-8 flex gap-3">
           <Button variant="outline" nativeButton={false} render={<Link href="/login" />}>
@@ -217,7 +217,7 @@ export default function CreatePostPage() {
           </div>
           {editId && acceptedCount > 0 && (
             <p className="text-xs text-muted-foreground">
-              {acceptedCount} player{acceptedCount === 1 ? '' : 's'} already joined — max {4 - acceptedCount} more slot{4 - acceptedCount === 1 ? '' : 's'} available.
+              {acceptedCount} player{acceptedCount === 1 ? '' : 's'} already joined - max {4 - acceptedCount} more slot{4 - acceptedCount === 1 ? '' : 's'} available.
             </p>
           )}
         </Field>
@@ -272,7 +272,7 @@ export default function CreatePostPage() {
           </Button>
           <Button type="submit" size="lg" className="sm:px-8" disabled={submitting}>
             <Send className="size-4" />
-            {submitting ? 'A guardar...' : editId ? 'Save changes' : 'Publish squad post'}
+            {submitting ? 'Saving...' : editId ? 'Save changes' : 'Publish squad post'}
           </Button>
         </div>
       </form>

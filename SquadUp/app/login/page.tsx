@@ -32,7 +32,7 @@ export default function LoginPage() {
       setAuthSession(data.token, data.user)
       router.push('/')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao iniciar sessão'
+      const message = err instanceof Error ? err.message : 'Error starting session'
       if (message === 'EMAIL_NOT_VERIFIED') {
         setEmailNotVerified(true)
       } else {
@@ -52,7 +52,7 @@ export default function LoginPage() {
       })
       setError(null)
     } catch {
-      // resposta genérica, sem revelar detalhes
+      // generic response, without revealing details
     } finally {
       setResending(false)
     }
@@ -97,14 +97,14 @@ export default function LoginPage() {
 
         {emailNotVerified && (
           <div className="rounded-lg border border-border bg-secondary/40 p-3 text-sm">
-            A tua conta ainda não foi confirmada.{' '}
+            Your account has not been verified.{' '}
             <button
               type="button"
               onClick={handleResend}
               disabled={resending}
               className="font-medium text-primary hover:underline"
             >
-              {resending ? 'A reenviar...' : 'Reenviar email de confirmação'}
+              {resending ? 'Resending...' : 'Resend confirmation email'}
             </button>
           </div>
         )}
@@ -120,12 +120,12 @@ export default function LoginPage() {
 
         <Button type="submit" size="lg" className="mt-2 w-full" disabled={loading}>
           <LogIn className="size-4" />
-          {loading ? 'A entrar...' : 'Log In'}
+          {loading ? 'Logging in...' : 'Log In'}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{' '}
+        Don't have an account?{' '}
         <Link href="/register" className="font-medium text-primary hover:underline">
           Create one
         </Link>

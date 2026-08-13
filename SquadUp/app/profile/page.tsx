@@ -46,7 +46,7 @@ export default function ProfilePage() {
   const [postsPage, setPostsPage] = useState(1)
   const POSTS_PAGE_SIZE = 4
 
-  // campos editáveis
+  // editable fields
   const [username, setUsername] = useState('')
   const [ubisoftId, setUbisoftId] = useState('')
   const [platform, setPlatform] = useState<Platform>('PC')
@@ -130,7 +130,7 @@ export default function ProfilePage() {
       ? prev.filter((o) => o !== name)
       : prev.length < 8
         ? [...prev, name]
-        : prev, // limite de 8, alinhado com o backend
+        : prev, // limit of 8, aligned with the backend
   )
 }
 
@@ -146,7 +146,7 @@ export default function ProfilePage() {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Não foi possível carregar o perfil. Tenta fazer login novamente.
+          Could not load profile. Please try logging in again.
         </p>
       </main>
     )
@@ -201,7 +201,7 @@ export default function ProfilePage() {
                   </Button>
                   <Button onClick={handleSave} disabled={saving}>
                     <Save className="size-4" />
-                    {saving ? 'A guardar...' : 'Save'}
+                    {saving ? 'Saving...' : 'Save'}
                   </Button>
                 </>
               ) : (
@@ -351,7 +351,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <p className="mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                {profile.bio || 'Ainda não escreveste nada sobre ti.'}
+                {profile.bio || 'You haven\'t written anything about yourself yet.'}
               </p>
             </>
           )}
@@ -414,7 +414,7 @@ export default function ProfilePage() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Ainda não criaste nenhum squad post.
+                You haven't created any squad posts yet.
               </p>
             )}
           </Panel>
@@ -433,7 +433,7 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Ainda não escolheste operadores preferidos.</p>
+              <p className="text-sm text-muted-foreground">You haven't chosen preferred operators yet.</p>
             )}
           </Panel>
         </div>

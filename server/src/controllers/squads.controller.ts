@@ -79,7 +79,7 @@ export async function createSquad(req: AuthRequest, res: Response) {
 
   if (recentCount >= MAX_POSTS_PER_HOUR) {
     return res.status(429).json({
-      error: `Só podes criar ${MAX_POSTS_PER_HOUR} squad posts por hora. Tenta novamente mais tarde.`,
+      error: `You can only create ${MAX_POSTS_PER_HOUR} squad posts per hour. Please try again later.`,
     })
   }
 
@@ -94,10 +94,10 @@ export async function joinSquad(req: AuthRequest, res: Response) {
   const id = req.params.id as string
 
   const post = await prisma.squadPost.findUnique({ where: { id } })
-  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  if (!post) return res.status(404).json({ error: 'Squad post not found' })
 
   if (post.userId === req.userId) {
-    return res.status(400).json({ error: 'Não podes candidatar-te ao teu próprio post' })
+    return res.status(400).json({ error: 'You cannot apply to your own squad post' })
   }
 
   const existing = await prisma.notification.findFirst({
@@ -109,7 +109,7 @@ export async function joinSquad(req: AuthRequest, res: Response) {
   })
 
   if (existing) {
-    return res.status(409).json({ error: 'Já tens um pedido pendente para este squad' })
+    return res.status(409).json({ error: 'You already have a pending request for this squad' })
   }
 
   await prisma.notification.create({
@@ -124,15 +124,15 @@ export async function joinSquad(req: AuthRequest, res: Response) {
   res.status(201).json({ success: true })
 }
 
-const MAX_SQUAD_SIZE = 4 // não conta o dono do post
+const MAX_SQUAD_SIZE = 4 // does not count the post owner
 
 export async function updateSquad(req: AuthRequest, res: Response) {
   const id = req.params.id as string
 
   const post = await prisma.squadPost.findUnique({ where: { id } })
-  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  if (!post) return res.status(404).json({ error: 'Squad post not found' })
   if (post.userId !== req.userId) {
-    return res.status(403).json({ error: 'Sem permissão para editar este post' })
+    return res.status(403).json({ error: 'You are not the owner of this squad post' })
   }
 
   const parsed = updateSquadSchema.safeParse(req.body)
@@ -147,7 +147,7 @@ export async function updateSquad(req: AuthRequest, res: Response) {
 
     if (acceptedCount + parsed.data.playersNeeded > MAX_SQUAD_SIZE) {
       return res.status(400).json({
-        error: `Já tens ${acceptedCount} jogador${acceptedCount === 1 ? '' : 'es'} aceite${acceptedCount === 1 ? '' : 's'}. O máximo de vagas que podes abrir agora é ${MAX_SQUAD_SIZE - acceptedCount}.`,
+        error: `You already have ${acceptedCount} player${acceptedCount === 1 ? '' : 's'} accepted. The maximum number of spots you can open now is ${MAX_SQUAD_SIZE - acceptedCount}.`,
       })
     }
   }
@@ -164,9 +164,9 @@ export async function deleteSquad(req: AuthRequest, res: Response) {
   const id = req.params.id as string
 
   const post = await prisma.squadPost.findUnique({ where: { id } })
-  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  if (!post) return res.status(404).json({ error: 'Squad post not found' })
   if (post.userId !== req.userId) {
-    return res.status(403).json({ error: 'Sem permissão para apagar este post' })
+    return res.status(403).json({ error: 'You are not the owner of this squad post' })
   }
 
   await prisma.notification.deleteMany({ where: { squadPostId: id } })
@@ -189,7 +189,7 @@ export async function getSquad(req: Request, res: Response) {
     },
   })
 
-  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  if (!post) return res.status(404).json({ error: 'Squad post not found' })
 
   res.json({
     ...post,
@@ -202,13 +202,13 @@ export async function removeMember(req: AuthRequest, res: Response) {
   const username = req.params.username as string
 
   const post = await prisma.squadPost.findUnique({ where: { id: postId } })
-  if (!post) return res.status(404).json({ error: 'Squad post não encontrado' })
+  if (!post) return res.status(404).json({ error: 'Squad post not found' })
   if (post.userId !== req.userId) {
-    return res.status(403).json({ error: 'Sem permissão para gerir este post' })
+    return res.status(403).json({ error: 'You are not the owner of this squad post' })
   }
 
   const member = await prisma.user.findUnique({ where: { username } })
-  if (!member) return res.status(404).json({ error: 'Utilizador não encontrado' })
+  if (!member) return res.status(404).json({ error: 'User not found' })
 
   const acceptedNotification = await prisma.notification.findFirst({
     where: {
@@ -220,7 +220,7 @@ export async function removeMember(req: AuthRequest, res: Response) {
   })
 
   if (!acceptedNotification) {
-    return res.status(404).json({ error: 'Este utilizador não está no squad' })
+    return res.status(404).json({ error: 'This user is not in the squad' })
   }
 
   await prisma.notification.update({

@@ -27,11 +27,11 @@ export default function ResetPasswordPage() {
     setError(null)
 
     if (!passwordCheck.valid) {
-      setError('A password precisa de pelo menos 8 caracteres, uma letra e um número.')
+      setError('Password must be at least 8 characters long and include a letter and a number.')
       return
     }
     if (password !== confirmPassword) {
-      setError('As passwords não coincidem.')
+      setError('Passwords do not match.')
       return
     }
 
@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
       })
       setDone(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao repor password')
+      setError(err instanceof Error ? err.message : 'Error resetting password')
     } finally {
       setLoading(false)
     }
@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
           Password updated
         </h1>
         <p className="mt-3 text-muted-foreground">
-          A tua password foi alterada com sucesso. Já podes fazer login com a nova password.
+          Your password has been updated successfully. You can now log in with your new password.
         </p>
         <Button className="mt-8" onClick={() => router.push('/login')}>
           Go to login
@@ -104,13 +104,13 @@ export default function ResetPasswordPage() {
 
                 <ul className="flex flex-col gap-0.5 text-xs">
                     <li className={passwordCheck.minLength ? 'text-primary' : 'text-muted-foreground'}>
-                    {passwordCheck.minLength ? '✓' : '·'} Pelo menos 8 caracteres
+                    {passwordCheck.minLength ? '✓' : '·'} At least 8 characters
                     </li>
                     <li className={passwordCheck.hasLetter ? 'text-primary' : 'text-muted-foreground'}>
-                    {passwordCheck.hasLetter ? '✓' : '·'} Pelo menos uma letra
+                    {passwordCheck.hasLetter ? '✓' : '·'} At least one letter
                     </li>
                     <li className={passwordCheck.hasNumber ? 'text-primary' : 'text-muted-foreground'}>
-                    {passwordCheck.hasNumber ? '✓' : '·'} Pelo menos um número
+                    {passwordCheck.hasNumber ? '✓' : '·'} At least one number
                     </li>
                 </ul>
             </>
@@ -131,7 +131,7 @@ export default function ResetPasswordPage() {
 
         <Button type="submit" size="lg" className="mt-2 w-full" disabled={loading}>
           <KeyRound className="size-4" />
-          {loading ? 'A guardar...' : 'Reset password'}
+          {loading ? 'Updating password...' : 'Reset password'}
         </Button>
       </form>
 

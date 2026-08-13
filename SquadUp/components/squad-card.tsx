@@ -26,7 +26,10 @@ export function SquadCard({ post }: { post: SquadPost }) {
   const [removingUsername, setRemovingUsername] = useState<string | null>(null)
 
   async function handleJoin() {
-    if (!user) return
+    if (!user) {
+      router.push('/login')
+      return
+    }
     setStatus('loading')
     setError(null)
     try {

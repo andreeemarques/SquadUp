@@ -1,9 +1,14 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Search, PlusCircle, Users, ShieldCheck, Zap, Crosshair } from 'lucide-react'
+import { Search, PlusCircle, Users, ShieldCheck, Zap, Crosshair, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SquadCard } from '@/components/squad-card'
-import { SQUAD_POSTS } from '@/lib/data'
+import { apiFetch } from '@/lib/api'
+import { mapApiPost, type ApiSquadPost } from '@/lib/squads'
+import { type SquadPost } from '@/lib/data'
 
 const FEATURES = [
   {
@@ -26,14 +31,17 @@ const FEATURES = [
   },
 ]
 
-const STATS = [
-  { value: '48K+', label: 'Active players' },
-  { value: '12K', label: 'Squads formed daily' },
-  { value: '5', label: 'Platforms & regions' },
-  { value: '4.8', label: 'Avg. teammate rating' },
-]
-
 export default function HomePage() {
+  const [recentPosts, setRecentPosts] = useState<SquadPost[]>([])
+  const [loadingPosts, setLoadingPosts] = useState(true)
+
+  useEffect(() => {
+    apiFetch('/squads')
+      .then((data: ApiSquadPost[]) => setRecentPosts(data.slice(0, 3).map(mapApiPost)))
+      .catch(() => {})
+      .finally(() => setLoadingPosts(false))
+  }, [])
+
   return (
     <main>
       {/* Hero */}
@@ -87,19 +95,6 @@ export default function HomePage() {
                 Create Post
               </Button>
             </div>
-
-            <dl className="mt-14 grid max-w-lg grid-cols-2 gap-6 sm:grid-cols-4">
-              {STATS.map((s) => (
-                <div key={s.label}>
-                  <dt className="font-display text-3xl font-bold text-foreground">
-                    {s.value}
-                  </dt>
-                  <dd className="mt-1 text-xs text-muted-foreground">
-                    {s.label}
-                  </dd>
-                </div>
-              ))}
-            </dl>
           </div>
         </div>
       </section>
@@ -161,11 +156,21 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {SQUAD_POSTS.slice(0, 3).map((post) => (
-              <SquadCard key={post.id} post={post} />
-            ))}
-          </div>
+          {loadingPosts ? (
+            <div className="mt-10 flex justify-center">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : recentPosts.length > 0 ? (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {recentPosts.map((post) => (
+                <SquadCard key={post.id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-10 text-center text-sm text-muted-foreground">
+              No active squad posts right now — be the first to create one.
+            </p>
+          )}
         </div>
       </section>
 

@@ -29,7 +29,7 @@ export default function PublicProfilePage() {
   useEffect(() => {
     apiFetch(`/users/${params.username}`)
       .then(setProfile)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar perfil'))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Error loading profile'))
       .finally(() => setLoading(false))
   }, [params.username])
 
@@ -45,7 +45,7 @@ export default function PublicProfilePage() {
     return (
       <main className="flex min-h-[60vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          {error ?? 'Utilizador não encontrado.'}
+          {error ?? 'Profile not found.'}
         </p>
       </main>
     )
@@ -101,7 +101,7 @@ export default function PublicProfilePage() {
           </div>
 
           <p className="mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            {profile.bio || 'Este utilizador ainda não escreveu uma bio.'}
+            {profile.bio || 'This user has not written a bio yet.'}
           </p>
         </div>
       </section>
@@ -122,7 +122,7 @@ export default function PublicProfilePage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Ainda não escolheu operadores preferidos.</p>
+          <p className="text-sm text-muted-foreground">He hasn't chosen preferred operators yet.</p>
         )}
       </section>
     </main>

@@ -38,7 +38,7 @@ export default function SearchPage() {
   useEffect(() => {
     apiFetch('/squads')
       .then((data: ApiSquadPost[]) => setPosts(data.map(mapApiPost)))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Erro ao carregar squads'))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Error loading squads'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -79,7 +79,6 @@ export default function SearchPage() {
         (a, b) => rankDistance(a.rank, user?.rank) - rankDistance(b.rank, user?.rank),
       )
     }
-    // 'recent' não precisa de sort extra: a API já devolve por createdAt desc
 
     return sorted
   }, [filters, query, posts, sortBy, user?.rank])

@@ -24,7 +24,7 @@ export default function VerifyEmailPage() {
         setStatus('success')
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : 'Erro ao verificar email')
+        setError(err instanceof Error ? err.message : 'Error verifying email')
         setStatus('error')
       })
   }, [params.token])
@@ -33,7 +33,7 @@ export default function VerifyEmailPage() {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">A verificar o teu email...</p>
+        <p className="text-sm text-muted-foreground">Verifying your email...</p>
       </main>
     )
   }
@@ -64,7 +64,7 @@ export default function VerifyEmailPage() {
         Email verified successfully
       </h1>
       <p className="mt-3 text-muted-foreground">
-        A tua conta está ativa. Já podes começar a usar o SquadUp.
+        Your account is now active. You can start using SquadUp.
       </p>
       <Button className="mt-8" onClick={() => router.push('/')}>
         Go to SquadUp
